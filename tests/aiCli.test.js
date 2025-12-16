@@ -19,4 +19,15 @@ describe('AI CLI Module', () => {
       );
     });
   });
+
+  describe('TDD Cycle 4: Handle AI CLI errors', () => {
+    test('shouldThrowErrorWhenAICliFailsToExecute', () => {
+      const mockDiff = 'diff --git a/file.js b/file.js';
+      execSync.mockImplementation(() => {
+        throw new Error('AI CLI not found');
+      });
+      
+      expect(() => aiCli.summarizeDiff(mockDiff)).toThrow('AI CLI not found');
+    });
+  });
 });
