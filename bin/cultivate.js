@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fileReader = require('../src/fileReader');
+const aiConsolidation = require('../src/aiConsolidation');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -38,11 +39,15 @@ async function run() {
     console.log('\n=== Current Instructions ===');
     console.log(instructions || '(No instructions found)');
     
-    console.log('\n\n=== Suggestions ===');
-    console.log('Based on the memories collected, consider:');
-    console.log('1. Adding patterns you\'ve learned to your instructions');
-    console.log('2. Removing outdated information');
-    console.log('3. Refining your coding standards based on changes made\n');
+    console.log('\n\n=== AI-Generated Suggestions ===');
+    console.log('Analyzing memories and generating consolidation suggestions...\n');
+    
+    const suggestions = await aiConsolidation.generateConsolidationSuggestions(memories, instructions);
+    console.log(suggestions);
+    
+    console.log('\n\n=== Next Steps ===');
+    console.log('Review the suggestions above and manually update your instruction files as needed.');
+    console.log('Then clean up the memory files below.\n');
     
     const shouldCleanup = await question('Clean up memory files? (y/n): ');
     
