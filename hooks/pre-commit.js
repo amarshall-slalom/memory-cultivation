@@ -1,5 +1,43 @@
 #!/usr/bin/env node
 
-// Pre-commit hook entry point
-console.log('Pre-commit hook triggered');
-process.exit(0);
+const gitDiff = require('../src/gitDiff');
+const aiCli = require('../src/aiCli');
+const memoryStorage = require('../src/memoryStorage');
+const cultivateDetector = require('../src/cultivateDetector');
+const { execSync } = require('child_process');
+
+function run() {
+  try {
+    if (cultivateDetector.isCultivateCommit()) {
+      console.log('Cultivate commit detected, skipping memory generation');
+      return 0;
+    }
+
+    const diff = gitDiff.getStagedDiff();
+    
+    if (!diff || diff.trim() === '') {
+      console.log('No staged changes, skipping memory generation');
+      return 0;
+    }
+
+    console.log('Generating memory summary...');
+    const summary = aiCli.summarizeDiff(diff);
+    
+    const commitHash = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+    const fileName = memoryStorage.generateFileName(commitHash, new Date());
+    
+    memoryStorage.saveMemory(fileName, summary);
+    console.log(`Memory saved to .memory/${fileName}`);
+    
+    return 0;
+  } catch (error) {
+    console.error('Pre-commit hook error:', error.message);
+    return 1;
+  }
+}
+
+if (require.main === module) {
+  process.exit(run());
+}
+
+module.exports = { run };

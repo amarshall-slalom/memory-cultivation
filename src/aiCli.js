@@ -1,11 +1,29 @@
-const { execSync } = require('child_process');
-
 function summarizeDiff(diff) {
-  const prompt = 'Review the attached diff and write a brief summary of the changes, focusing on 2 types of changes: behavioral (new functionality) and structural (refactors, style changes, etc.)';
+  // For now, create a simple summary
+  // This will be replaced with actual AI CLI integration based on configuration
+  const lines = diff.split('\n');
+  const addedLines = lines.filter(l => l.startsWith('+')).length;
+  const removedLines = lines.filter(l => l.startsWith('-')).length;
+  const files = new Set();
   
-  const command = `gh copilot suggest "${prompt}\n\nDiff:\n${diff.replace(/"/g, '\\"')}"`;
+  lines.forEach(line => {
+    if (line.startsWith('diff --git')) {
+      const match = line.match(/b\/(.*)/);
+      if (match) files.add(match[1]);
+    }
+  });
   
-  return execSync(command, { encoding: 'utf8' });
+  return `## Summary
+  
+**Files Changed**: ${files.size}
+**Lines Added**: ${addedLines}
+**Lines Removed**: ${removedLines}
+
+**Files**:
+${Array.from(files).map(f => `- ${f}`).join('\n')}
+
+**Note**: This is a placeholder summary. Configure an AI CLI for detailed analysis.
+`;
 }
 
 module.exports = {
