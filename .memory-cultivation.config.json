@@ -1,0 +1,14 @@
+{
+  "aiProvider": "placeholder",
+  "instructionFiles": [
+    ".github/copilot/COPILOT_INSTRUCTIONS.md"
+  ],
+  "memoryDirectory": ".memory",
+  "prompts": {
+    "summarize": "Review the attached diff and write a brief summary of the changes, focusing on 2 types of changes: behavioral (new functionality) and structural (refactors, style changes, etc.)"
+  },
+  "cultivation": {
+    "autoCommit": false,
+    "commitMessage": "chore: clean up memory files after cultivation"
+  }
+}

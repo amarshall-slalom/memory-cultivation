@@ -12,7 +12,11 @@
     "test:coverage": "jest --coverage",
     "lint": "eslint src tests",
     "lint:fix": "eslint src tests --fix",
-    "prepare": "husky"
+    "prepare": "husky",
+    "cultivate": "node bin/cultivate.js"
+  },
+  "bin": {
+    "memory-cultivate": "./bin/cultivate.js"
   },
   "repository": {
     "type": "git",
