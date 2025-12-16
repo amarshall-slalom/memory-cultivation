@@ -2,19 +2,25 @@
 
 ## 📊 Implementation Status
 
-**Overall Progress**: MVP+ (Phases 1-2 fully done, Phase 3 enhanced with AI, Phases 4-6 partially complete)
+**Overall Progress**: MVP with bugs identified (Phases 1-2 complete, Phase 3 needs refactoring)
 
 ### Quick Summary:
 - ✅ **Phase 1**: Project Setup & Infrastructure (100% Complete - 4/4 tasks)
 - ✅ **Phase 2**: Pre-Commit Hook - Core Functionality (100% Complete - 11/11 TDD cycles)
-- ✅ **Phase 3**: Memory Cultivation Command (Enhanced - 8/11 TDD cycles implemented with AI)
+- ⚠️ **Phase 3**: Memory Cultivation Command (Needs Refactoring - 8/14 cycles, bugs found in AI integration)
 - ⏸️ **Phase 4**: Configuration & Flexibility (Template only - 1/4 tasks)
 - ✅ **Phase 5**: Documentation & Polish (100% Complete - 3/3 tasks)
-- ✅ **Phase 6**: Final Testing & Validation (MVP Complete - core testing done)
+- ⏸️ **Phase 6**: Final Testing & Validation (Needs real integration tests)
 
-**Total**: 27 items fully completed, 6 items MVP implemented, 14 items deferred
+**Total**: 27 items completed (some buggy), 3 new cycles identified, 14 items deferred
 
-**New**: GitHub Copilot CLI integration for AI-powered diff summaries and memory consolidation!
+**Issues Found**: 
+- ❌ Incorrect copilot command (`gh copilot` instead of `copilot`)
+- ❌ Hardcoded commands instead of config-driven
+- ❌ No model selection (should use gpt-4o-mini)
+- ❌ Over-mocked tests that don't catch real integration issues
+
+**Next Steps**: Fix AI CLI configuration and add proper integration tests
 
 ---
 
@@ -90,11 +96,14 @@ This project consists of two main components:
   - [x] Commit: "structural: refactor git diff module for clarity"
 
 ### 2.2 AI CLI Integration Module
-- [x] **BEHAVIORAL** (TDD Cycle 3): Test AI CLI execution ✅ **COMPLETED**
+
+#### 2.2.1 Initial Implementation (NEEDS REFACTORING - has bugs)
+- [x] **BEHAVIORAL** (TDD Cycle 3): Test AI CLI execution ⚠️ **COMPLETED BUT BUGGY**
   - [x] Write failing test: `shouldCallAICliWithDiffAndPrompt`
   - [x] Implement minimum code to call AI CLI (mock/stub for testing)
   - [x] Verify test passes
   - [x] Commit: "behavioral: add AI CLI invocation capability"
+  - **Issues**: Same issues as 3.2.1 - wrong command, hardcoded, no config
 
 - [x] **BEHAVIORAL** (TDD Cycle 4): Handle AI CLI errors ✅ **COMPLETED**
   - [x] Write failing test: `shouldThrowErrorWhenAICliFailsToExecute`
@@ -113,6 +122,17 @@ This project consists of two main components:
   - [x] Improve error messages
   - [x] Verify tests still pass
   - [x] Commit: "structural: extract AI CLI interface"
+
+#### 2.2.2 Fix with Configuration-Based Approach
+- [ ] **Note**: See section 3.2.2 for the shared AI command builder implementation
+- [ ] **BEHAVIORAL**: Refactor aiCli.js to use shared command builder
+  - [ ] Update `summarizeDiff()` to call `aiCommandBuilder.executeAICommand(config, 'summarize', prompt)`
+  - [ ] Remove hardcoded `gh copilot` command
+  - [ ] Remove duplicate prompt file creation logic (use shared utility)
+  - [ ] Write integration test: `shouldSummarizeDiffWithRealCopilot` (conditional on copilot availability)
+  - [ ] Verify command uses gpt-4o-mini model
+  - [ ] Verify all tests pass
+  - [ ] Commit: "behavioral: update aiCli to use configurable command builder"
 
 ### 2.3 File Naming & Storage Module
 - [x] **BEHAVIORAL** (TDD Cycle 6): Test commit hash retrieval ✅ **COMPLETED**
@@ -183,25 +203,103 @@ This project consists of two main components:
   - [x] Commit: "behavioral: handle missing directories in file reading"
 
 ### 3.2 AI Consolidation Module
-- [x] **BEHAVIORAL** (TDD Cycle 15): Generate consolidation suggestions ✅ **COMPLETED**
+
+#### 3.2.1 Initial Implementation (NEEDS REFACTORING - has bugs)
+- [x] **BEHAVIORAL** (TDD Cycle 15 - INITIAL): Generate consolidation suggestions ⚠️ **BUGGY**
   - [x] Write failing test: `shouldGenerateConsolidatedLearningSuggestions`
   - [x] Implement AI call to consolidate memories into suggested instruction updates
   - [x] Verify test passes
   - [x] Commit: "behavioral: generate consolidated learning suggestions from memories"
-  - **Note**: Implemented with GitHub Copilot CLI integration
+  - **Issues Found**:
+    - ❌ Uses incorrect command `gh copilot suggest` instead of just `copilot`
+    - ❌ Hardcoded command in code instead of reading from config
+    - ❌ No model selection (should use gpt-4o-mini for cost efficiency)
+    - ❌ Tests are over-mocked and don't catch real integration issues
 
-- [ ] **BEHAVIORAL** (TDD Cycle 16): Identify outdated information ⏸️ **NOT IMPLEMENTED**
+#### 3.2.2 Configuration-Based AI CLI Support
+- [ ] **BEHAVIORAL** (TDD Cycle 15a): Configurable AI command execution
+  - [ ] **Design Requirements**:
+    - Config must support `command` field for base CLI executable (e.g., "copilot")
+    - Config must support optional `commandArgs` array for additional flags (e.g., ["-m", "gpt-4o-mini"])
+    - Must allow full command string like "copilot -s --agent memory" to be split properly
+    - Default config should specify: `"command": "copilot"` with `"commandArgs": ["-m", "gpt-4o-mini"]`
+    - Config should be per-operation (summarize vs consolidate may use different args)
+  - [ ] **Implementation Steps**:
+    - [ ] Write failing test: `shouldExecuteConfiguredAICommandWithArgs`
+      - Test with command="copilot" and commandArgs=["-m", "gpt-4o-mini"]
+      - Test with command="copilot -s --agent memory" and no commandArgs
+      - Test command building logic separately from execution
+      - Mock child_process.execSync to verify exact command string constructed
+    - [ ] Write failing test: `shouldReadAIConfigFromConfigFile`
+      - Test reading ai.command and ai.commandArgs from config
+      - Test fallback behavior if config missing
+      - Test validation of command format
+    - [ ] Create new module `src/aiCommandBuilder.js`:
+      - Function `buildCommand(config, operation, prompt)` returns command string
+      - Function `executeAICommand(config, operation, prompt)` runs command and returns output
+      - Proper escaping of prompt content for shell execution
+      - Handle both array-based args and string-based command formats
+    - [ ] Update `.memory-cultivation.config.json`:
+      ```json
+      {
+        "ai": {
+          "command": "copilot",
+          "commandArgs": ["-m", "gpt-4o-mini"],
+          "operations": {
+            "summarize": {
+              "prompt": "Review the attached diff...",
+              "commandArgs": ["-m", "gpt-4o-mini"]  // optional override
+            },
+            "consolidate": {
+              "prompt": "You are reviewing accumulated memories...",
+              "commandArgs": ["-m", "gpt-4o-mini"]
+            }
+          }
+        }
+      }
+      ```
+    - [ ] Verify tests pass
+    - [ ] Commit: "behavioral: add configurable AI command execution"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 15b): Integration tests with real copilot
+  - [ ] **Test Requirements**:
+    - Tests should detect if `copilot` command is available (skip if not)
+    - Tests should actually invoke copilot with a small test prompt
+    - Tests should verify prompt is passed correctly
+    - Tests should verify response is received and parsed
+    - Tests should verify model argument is passed correctly (-m gpt-4o-mini)
+  - [ ] **Implementation Steps**:
+    - [ ] Write integration test: `shouldInvokeCopilotWithRealCommand` (conditional)
+      - Use `which copilot` or equivalent to check availability
+      - Skip test with clear message if copilot not installed
+      - Pass minimal prompt to verify command works
+      - Assert response is non-empty string
+    - [ ] Write integration test: `shouldPassModelArgumentToCopilot`
+      - Verify -m flag is included in command
+      - Verify gpt-4o-mini is specified
+    - [ ] Write integration test: `shouldHandleMultilinePromptsCorrectly`
+      - Test with prompt containing newlines
+      - Test with prompt containing quotes
+      - Test with prompt containing special characters
+    - [ ] Refactor `src/aiCli.js` to use new command builder
+    - [ ] Refactor `src/aiConsolidation.js` to use new command builder
+    - [ ] Verify all tests pass (unit + integration)
+    - [ ] Commit: "behavioral: integrate configurable command builder into AI modules"
+
+- [ ] **STRUCTURAL** (TDD Cycle 15c): Refactor and cleanup
+  - [ ] Extract prompt file creation/cleanup into reusable utility
+  - [ ] Remove duplicate command execution logic
+  - [ ] Improve error messages to show exact command that failed
+  - [ ] Add logging option to show AI commands being executed (debug mode)
+  - [ ] Verify all tests still pass
+  - [ ] Run linter and fix issues
+  - [ ] Commit: "structural: refactor AI command execution for reusability"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 16): Identify outdated information ⏸️ **DEFERRED**
   - [ ] Write failing test: `shouldIdentifyOutdatedInstructionContent`
   - [ ] Implement AI call to identify outdated/incorrect information in instructions
   - [ ] Verify test passes
   - [ ] Commit: "behavioral: identify outdated instruction content"
-  - **Note**: Would require real AI integration, not placeholder
-
-- [ ] **STRUCTURAL**: Refactor AI consolidation ⏸️ **NOT IMPLEMENTED**
-  - [ ] Extract shared AI prompting logic
-  - [ ] Improve prompt templates
-  - [ ] Verify tests still pass
-  - [ ] Commit: "structural: refactor AI consolidation module"
 
 ### 3.3 User Interaction Module
 - [x] **BEHAVIORAL** (TDD Cycle 17): Prompt for integration approval ✅ **MVP IMPLEMENTED**
@@ -269,26 +367,27 @@ This project consists of two main components:
 ## Phase 4: Configuration & Flexibility
 
 ### 4.1 Configuration File Support
-- [ ] **BEHAVIORAL** (TDD Cycle 23): Read configuration file ⏸️ **NOT IMPLEMENTED**
+- [ ] **BEHAVIORAL** (TDD Cycle 23): Read configuration file (PART OF 3.2.2)
   - [ ] Write failing test: `shouldReadConfigurationFromFile`
   - [ ] Implement config file reading (JSON/YAML)
   - [ ] Verify test passes
   - [ ] Commit: "behavioral: read configuration from file"
-  - **Note**: Template created but not wired up
+  - **Note**: Will be implemented as part of AI command builder (3.2.2)
 
-- [ ] **BEHAVIORAL** (TDD Cycle 24): Support AI CLI selection ⏸️ **NOT IMPLEMENTED**
-  - [ ] Write failing test: `shouldUseConfiguredAICliProvider`
-  - [ ] Implement configurable AI CLI selection
+- [ ] **BEHAVIORAL** (TDD Cycle 24): Support AI CLI configuration (IMPLEMENTED IN 3.2.2)
+  - [ ] Write failing test: `shouldUseConfiguredAICommand`
+  - [ ] Implement configurable AI command with arguments
+  - [ ] Support per-operation command overrides
   - [ ] Verify test passes
-  - [ ] Commit: "behavioral: support configurable AI CLI provider"
-  - **Note**: Would require multiple AI provider implementations
+  - [ ] Commit: "behavioral: support configurable AI CLI commands"
+  - **Note**: See section 3.2.2 for detailed implementation
 
-- [ ] **BEHAVIORAL** (TDD Cycle 25): Support custom prompts ⏸️ **NOT IMPLEMENTED**
+- [ ] **BEHAVIORAL** (TDD Cycle 25): Support custom prompts (IMPLEMENTED IN 3.2.2)
   - [ ] Write failing test: `shouldUseCustomPromptTemplatesFromConfig`
-  - [ ] Implement custom prompt template support
+  - [ ] Implement custom prompt template support per operation
   - [ ] Verify test passes
   - [ ] Commit: "behavioral: support custom AI prompt templates"
-  - **Note**: Would require config integration
+  - **Note**: Handled by config.ai.operations structure in 3.2.2
 
 ### 4.2 Default Configuration
 - [x] **STRUCTURAL**: Create default config file ✅ **COMPLETED**
@@ -340,20 +439,44 @@ This project consists of two main components:
   - **Note**: Pre-commit integration tested; cultivation is manual workflow
 
 ### 6.2 Edge Case Testing
-- [x] **BEHAVIORAL**: Test edge cases ✅ **PARTIALLY COMPLETED**
+- [x] **BEHAVIORAL**: Test edge cases ⚠️ **NEEDS IMPROVEMENT**
   - [ ] Test with very large diffs ⏸️ **NOT IMPLEMENTED**
   - [x] Test with empty repositories (handled in fileReader.js)
-  - [x] Test with AI CLI failures (handled in tests)
+  - [x] Test with AI CLI failures (handled in tests) - **BUT over-mocked**
   - [ ] Test with concurrent commits ⏸️ **NOT IMPLEMENTED**
   - [x] Verify all edge cases handled
   - [x] Commit: "behavioral: add edge case handling and tests"
-  - **Note**: Basic edge cases covered
+  - **Issues**: 
+    - ❌ AI failure tests are over-mocked and don't test real command execution
+    - ❌ Need tests with real copilot when available, graceful skip when not
 
-### 6.3 Final Validation
-- [x] Run full test suite ✅ **COMPLETED** (15 tests passing)
-- [x] Run linter and fix any warnings ✅ **COMPLETED** (0 errors, 0 warnings)
-- [x] Test in real repository scenarios ✅ **COMPLETED** (tested on itself)
-- [x] Verify all documentation is accurate ✅ **COMPLETED**
+### 6.3 Integration Testing Strategy
+- [ ] **NEW**: Establish integration testing patterns
+  - [ ] **Philosophy**:
+    - Unit tests mock external dependencies (child_process, fs)
+    - Integration tests check real command execution when available
+    - Tests gracefully skip with clear messages when dependencies missing
+    - No false positives from over-mocking
+  - [ ] **Implementation**:
+    - [ ] Create helper: `isCommandAvailable(command)` - checks if CLI tool installed
+    - [ ] Pattern: `test.skipIf(!isCommandAvailable('copilot'), 'message', () => {...})`
+    - [ ] Integration tests marked with tag or separate file: `*.integration.test.js`
+    - [ ] CI can run `npm test` (unit only) or `npm run test:integration` (both)
+  - [ ] **Specific Tests Needed**:
+    - [ ] `aiCli.integration.test.js` - real copilot summarization
+    - [ ] `aiConsolidation.integration.test.js` - real copilot consolidation
+    - [ ] Test shell escaping with special characters in prompts
+    - [ ] Test multiline prompt handling
+    - [ ] Test model selection flag is passed correctly
+  - [ ] Commit: "structural: establish integration testing patterns"
+
+### 6.4 Final Validation
+- [ ] Run full test suite (unit tests) - **NEEDS UPDATE after 3.2.2**
+- [ ] Run integration test suite - **NEW**
+- [ ] Run linter and fix any warnings
+- [ ] Test in real repository scenarios with real copilot
+- [ ] Verify all documentation is accurate
+- [ ] Commit: "behavioral: validate with integration tests"
 
 ---
 
@@ -373,6 +496,19 @@ This project consists of two main components:
 1. Write a failing test (Red)
 2. Write minimum code to pass (Green)
 3. Refactor for clarity (while tests stay Green)
+
+**Testing Strategy**:
+- **Unit Tests**: Mock external dependencies (file system, child processes, network)
+  - Fast, deterministic, run in CI always
+  - Test logic and error handling in isolation
+- **Integration Tests**: Use real commands when available, skip gracefully when not
+  - Test actual command execution and response parsing
+  - Verify shell escaping, argument passing, model selection
+  - Tagged separately (e.g., `*.integration.test.js`)
+  - Should detect and skip if required CLI tools not installed
+- **Avoid Over-Mocking**: If tests pass but code doesn't work, mocks are too permissive
+  - Integration tests catch what over-mocked unit tests miss
+  - Example: Wrong command `gh copilot` worked in tests but fails in reality
 
 **Commit Discipline**: 
 - Commit only when ALL tests pass
