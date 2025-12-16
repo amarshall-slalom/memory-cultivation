@@ -7,8 +7,17 @@ A tool for AI-assisted memory management in Git repositories. This tool helps tr
 - **Pre-commit Hook**: Automatically generates summaries of changes before each commit
 - **Memory Files**: Stores change summaries in `.memory/` directory for later review
 - **Cultivation Command**: Interactive tool to review accumulated memories and clean up
+- **AI-Powered**: Integrates with GitHub Copilot CLI for intelligent summaries and suggestions
 - **TDD-First**: Built following Test-Driven Development principles
 - **Cultivate Detection**: Smart detection to skip memory generation for cultivation commits
+
+## Prerequisites
+
+- Node.js (version 14 or higher)
+- Git
+- **GitHub Copilot CLI** (optional, but recommended for AI-powered features)
+  - Install with: `gh extension install github/gh-copilot`
+  - Without it, the tool falls back to basic diff statistics
 
 ## Installation
 
@@ -26,7 +35,7 @@ The pre-commit hook runs automatically on every commit. It will:
 
 1. Detect if this is a "cultivate" commit (only instruction/memory file changes) and skip if so
 2. Fetch the staged git diff
-3. Generate a summary of the changes
+3. Generate an AI-powered summary of the changes using GitHub Copilot CLI (or basic stats if not available)
 4. Save the summary to `.memory/<commit-hash>-<date>.md`
 
 The hook runs silently and won't block your commits unless there's an error.
@@ -42,9 +51,10 @@ npm run cultivate
 This will:
 1. Display all accumulated memory files
 2. Show current instruction files (e.g., `.github/copilot/COPILOT_INSTRUCTIONS.md`)
-3. Provide suggestions for improving your workflow
-4. Offer to clean up memory files
-5. Optionally commit the cleanup
+3. **Generate AI-powered consolidation suggestions** using GitHub Copilot CLI
+4. Provide actionable suggestions for improving your workflow
+5. Offer to clean up memory files
+6. Optionally commit the cleanup
 
 ## Project Structure
 
@@ -56,7 +66,8 @@ This will:
 ├── hooks/               # Git hook implementations
 │   └── pre-commit.js    # Pre-commit hook logic
 ├── src/                 # Source code modules
-│   ├── aiCli.js        # AI CLI integration (placeholder)
+│   ├── aiCli.js        # AI CLI integration (GitHub Copilot)
+│   ├── aiConsolidation.js  # AI-powered memory consolidation
 │   ├── cultivateDetector.js  # Detect cultivate commits
 │   ├── fileReader.js   # Read memory and instruction files
 │   ├── gitDiff.js      # Fetch git diffs
@@ -91,8 +102,31 @@ This project follows:
 
 ## Configuration
 
-Currently uses a simple placeholder for AI summaries. Future versions will support:
-- Multiple AI CLI providers (GitHub Copilot, Claude, Gemini, etc.)
+The tool is configured via `.memory-cultivation.config.json`:
+
+```json
+{
+  "aiProvider": "copilot",
+  "instructionFiles": [
+    ".github/copilot/COPILOT_INSTRUCTIONS.md"
+  ],
+  "memoryDirectory": ".memory",
+  "prompts": {
+    "summarize": "Review the attached diff and write a brief summary..."
+  },
+  "cultivation": {
+    "autoCommit": false,
+    "commitMessage": "chore: clean up memory files after cultivation"
+  }
+}
+```
+
+### AI Provider
+
+Currently supports **GitHub Copilot CLI** as the AI provider. The tool gracefully falls back to basic diff statistics if Copilot is not available.
+
+Future versions will support:
+- Multiple AI CLI providers (Claude, Gemini, etc.)
 - Custom prompt templates
 - Configurable instruction file patterns
 
@@ -112,9 +146,11 @@ Currently uses a simple placeholder for AI summaries. Future versions will suppo
 
 1. Run `npm run cultivate`
 2. Review accumulated memories
-3. Manually update instruction files based on insights
-4. Choose to clean up memory files
-5. Optionally commit the cleanup
+3. **AI analyzes memories and suggests instruction improvements**
+4. Review AI-generated consolidation suggestions
+5. Manually update instruction files based on insights
+6. Choose to clean up memory files
+7. Optionally commit the cleanup
 
 ## Contributing
 

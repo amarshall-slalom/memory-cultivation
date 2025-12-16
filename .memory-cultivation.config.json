@@ -1,5 +1,5 @@
 {
-  "aiProvider": "placeholder",
+  "aiProvider": "copilot",
   "instructionFiles": [
     ".github/copilot/COPILOT_INSTRUCTIONS.md"
   ],
