@@ -15,4 +15,14 @@ describe('Git Diff Module', () => {
       expect(execSync).toHaveBeenCalledWith('git diff --cached', { encoding: 'utf8' });
     });
   });
+
+  describe('TDD Cycle 2: Handle empty diff', () => {
+    test('shouldReturnEmptyStringWhenNoDiffExists', () => {
+      execSync.mockReturnValue('');
+      
+      const diff = gitDiff.getStagedDiff();
+      
+      expect(diff).toBe('');
+    });
+  });
 });
