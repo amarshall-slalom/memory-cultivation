@@ -1,7 +1,5 @@
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const aiCommandBuilder = require('./aiCommandBuilder');
+const configReader = require('./configReader');
 
 function summarizeDiff(diff) {
   // Check if diff is empty
@@ -9,34 +7,20 @@ function summarizeDiff(diff) {
     return '## Summary\n\nNo changes detected.';
   }
 
-  // Try to use GitHub Copilot CLI for better summaries
+  // Try to use configured AI CLI
   try {
-    // Create a temporary file for the diff
-    const tmpDir = os.tmpdir();
-    const diffFile = path.join(tmpDir, `diff-${Date.now()}.txt`);
-    fs.writeFileSync(diffFile, diff);
-
-    const prompt = `Review the attached diff and write a brief summary of the changes, focusing on 2 types of changes: behavioral (new functionality) and structural (refactors, style changes, etc.)
+    const config = configReader.loadConfig();
+    const prompt = aiCommandBuilder.getPrompt(config, 'summarize');
+    const fullPrompt = `${prompt}
 
 Diff content:
 ${diff}`;
 
-    const promptFile = path.join(tmpDir, `prompt-${Date.now()}.txt`);
-    fs.writeFileSync(promptFile, prompt);
-
-    // Call GitHub Copilot CLI
-    const result = execSync(`gh copilot suggest --target shell "$(cat ${promptFile})"`, {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe']
-    });
-
-    // Clean up
-    fs.unlinkSync(diffFile);
-    fs.unlinkSync(promptFile);
+    const result = aiCommandBuilder.executeAICommand(config, 'summarize', fullPrompt);
 
     return `## Summary\n\n${result.trim()}`;
   } catch {
-    // Fallback to simple summary if copilot is not available
+    // Fallback to simple summary if AI CLI is not available
     const lines = diff.split('\n');
     const addedLines = lines.filter(l => l.startsWith('+')).length;
     const removedLines = lines.filter(l => l.startsWith('-')).length;

@@ -20,5 +20,21 @@ describe('Cultivate Detector Module', () => {
       
       expect(isCultivate).toBe(false);
     });
+
+    test('shouldSkipCommitsWithOnlyMemoryFileChanges', () => {
+      execSync.mockReturnValue('.memory/abc123.md\n.memory/def456.md');
+      
+      const isCultivate = cultivateDetector.isCultivateCommit();
+      
+      expect(isCultivate).toBe(true);
+    });
+
+    test('shouldNotSkipCommitsWithMixedMemoryAndCodeChanges', () => {
+      execSync.mockReturnValue('.memory/abc123.md\nsrc/index.js');
+      
+      const isCultivate = cultivateDetector.isCultivateCommit();
+      
+      expect(isCultivate).toBe(false);
+    });
   });
 });
