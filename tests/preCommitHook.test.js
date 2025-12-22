@@ -16,27 +16,41 @@ describe('Pre-Commit Hook Integration', () => {
 
   describe('TDD Cycle 11: Execute full pre-commit workflow', () => {
     test('shouldExecuteFullPreCommitWorkflow', () => {
+      memoryStorage.getBranchFileName.mockReturnValue('.memory/feature-test.md');
       cultivateDetector.isCultivateCommit.mockReturnValue(false);
       gitDiff.getStagedDiff.mockReturnValue('diff content');
       aiCli.summarizeDiff.mockReturnValue('AI summary');
-      memoryStorage.generateFileName.mockReturnValue('abc123-2024-01-15.md');
-      memoryStorage.saveMemory.mockImplementation(() => {});
+      memoryStorage.appendMemory.mockImplementation(() => {});
 
       const result = preCommitHook.run();
 
+      expect(memoryStorage.getBranchFileName).toHaveBeenCalled();
       expect(cultivateDetector.isCultivateCommit).toHaveBeenCalled();
       expect(gitDiff.getStagedDiff).toHaveBeenCalled();
       expect(aiCli.summarizeDiff).toHaveBeenCalledWith('diff content');
-      expect(memoryStorage.saveMemory).toHaveBeenCalled();
+      expect(memoryStorage.appendMemory).toHaveBeenCalled();
       expect(result).toBe(0);
     });
 
     test('shouldSkipHookWhenCultivateCommitDetected', () => {
+      memoryStorage.getBranchFileName.mockReturnValue('.memory/feature-test.md');
       cultivateDetector.isCultivateCommit.mockReturnValue(true);
 
       const result = preCommitHook.run();
 
+      expect(memoryStorage.getBranchFileName).toHaveBeenCalled();
       expect(cultivateDetector.isCultivateCommit).toHaveBeenCalled();
+      expect(gitDiff.getStagedDiff).not.toHaveBeenCalled();
+      expect(result).toBe(0);
+    });
+
+    test('shouldSkipHookWhenOnMainBranch', () => {
+      memoryStorage.getBranchFileName.mockReturnValue(null);
+
+      const result = preCommitHook.run();
+
+      expect(memoryStorage.getBranchFileName).toHaveBeenCalled();
+      expect(cultivateDetector.isCultivateCommit).not.toHaveBeenCalled();
       expect(gitDiff.getStagedDiff).not.toHaveBeenCalled();
       expect(result).toBe(0);
     });
