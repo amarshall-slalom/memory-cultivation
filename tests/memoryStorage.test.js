@@ -80,4 +80,69 @@ describe('Memory Storage Module', () => {
       expect(branchFile).toBeNull();
     });
   });
+
+  describe('TDD Cycle 6b: Append mode for existing branch memory', () => {
+    test('shouldCreateNewFileForFirstCommitOnBranch', () => {
+      execSync.mockReturnValue('feature/auth\n');
+      fs.existsSync.mockReturnValue(false);
+      fs.writeFileSync.mockImplementation(() => {});
+      
+      const timestamp = new Date('2024-12-22T14:30:00');
+      memoryStorage.appendMemory('AI summary here', timestamp);
+      
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        expect.stringContaining('.memory/feature-auth.md'),
+        expect.stringContaining('# Memory for branch: feature/auth'),
+        'utf8'
+      );
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('## Commit 1 - 2024-12-22 14:30:00'),
+        'utf8'
+      );
+    });
+
+    test('shouldAppendToExistingBranchMemory', () => {
+      execSync.mockReturnValue('feature/auth\n');
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockReturnValue(`# Memory for branch: feature/auth
+
+## Commit 1 - 2024-12-22 14:30:00
+
+First summary
+
+---
+`);
+      fs.writeFileSync.mockImplementation(() => {});
+      
+      const timestamp = new Date('2024-12-22T15:45:00');
+      memoryStorage.appendMemory('Second summary', timestamp);
+      
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        expect.stringContaining('.memory/feature-auth.md'),
+        expect.stringContaining('## Commit 2 - 2024-12-22 15:45:00'),
+        'utf8'
+      );
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('Second summary'),
+        'utf8'
+      );
+    });
+
+    test('shouldIncludeTimestampInEachEntry', () => {
+      execSync.mockReturnValue('feature/auth\n');
+      fs.existsSync.mockReturnValue(false);
+      fs.writeFileSync.mockImplementation(() => {});
+      
+      const timestamp = new Date('2024-12-22T14:30:45');
+      memoryStorage.appendMemory('Test summary', timestamp);
+      
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.stringContaining('2024-12-22 14:30:45'),
+        'utf8'
+      );
+    });
+  });
 });
