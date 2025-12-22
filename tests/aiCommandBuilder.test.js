@@ -14,7 +14,7 @@ describe('AI Command Builder Module', () => {
         const config = {
           ai: {
             command: 'copilot',
-            commandArgs: ['-m', 'gpt-4o-mini']
+            commandArgs: ['--model', 'gpt-5-mini']
           }
         };
         const prompt = 'Test prompt';
@@ -23,7 +23,7 @@ describe('AI Command Builder Module', () => {
 
         expect(result.command).toContain('copilot');
         expect(result.command).toContain('-m');
-        expect(result.command).toContain('gpt-4o-mini');
+        expect(result.command).toContain('gpt-5-mini');
         expect(result.promptFile).toBeTruthy();
         expect(result.prompt).toBe(prompt);
       });
@@ -48,7 +48,7 @@ describe('AI Command Builder Module', () => {
         const config = {
           ai: {
             command: 'copilot',
-            commandArgs: ['-m', 'gpt-4o-mini']
+            commandArgs: ['--model', 'gpt-5-mini']
           }
         };
         const prompt = 'Test prompt';
@@ -82,21 +82,21 @@ describe('AI Command Builder Module', () => {
         const config = {
           ai: {
             command: 'copilot',
-            commandArgs: ['-m', 'gpt-4o-mini']
+            commandArgs: ['--model', 'gpt-5-mini']
           }
         };
 
         const aiConfig = aiCommandBuilder.getAIConfig(config);
 
         expect(aiConfig.command).toBe('copilot');
-        expect(aiConfig.commandArgs).toEqual(['-m', 'gpt-4o-mini']);
+        expect(aiConfig.commandArgs).toEqual(['--model', 'gpt-5-mini']);
       });
 
       test('should use operation-specific commandArgs if provided', () => {
         const config = {
           ai: {
             command: 'copilot',
-            commandArgs: ['-m', 'gpt-4o-mini'],
+            commandArgs: ['--model', 'gpt-5-mini'],
             operations: {
               summarize: {
                 commandArgs: ['-m', 'gpt-4o', '--verbose']
@@ -116,7 +116,7 @@ describe('AI Command Builder Module', () => {
         const aiConfig = aiCommandBuilder.getAIConfig(config);
 
         expect(aiConfig.command).toBe('copilot');
-        expect(aiConfig.commandArgs).toEqual(['-m', 'gpt-4o-mini']);
+        expect(aiConfig.commandArgs).toEqual(['--model', 'gpt-5-mini']);
       });
 
       test('should validate command format', () => {

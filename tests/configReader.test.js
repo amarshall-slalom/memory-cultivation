@@ -13,7 +13,7 @@ describe('Config Reader Module', () => {
       const mockConfig = {
         ai: {
           command: 'copilot',
-          commandArgs: ['-m', 'gpt-4o-mini']
+          commandArgs: ['--model', 'gpt-5-mini']
         }
       };
 
@@ -23,7 +23,7 @@ describe('Config Reader Module', () => {
       const config = configReader.loadConfig();
 
       expect(config.ai.command).toBe('copilot');
-      expect(config.ai.commandArgs).toEqual(['-m', 'gpt-4o-mini']);
+      expect(config.ai.commandArgs).toEqual(['--model', 'gpt-5-mini']);
     });
 
     test('should return default config when file does not exist', () => {
@@ -32,7 +32,7 @@ describe('Config Reader Module', () => {
       const config = configReader.loadConfig();
 
       expect(config.ai.command).toBe('copilot');
-      expect(config.ai.commandArgs).toEqual(['-m', 'gpt-4o-mini']);
+      expect(config.ai.commandArgs).toEqual(['--model', 'gpt-5-mini']);
     });
 
     test('should return default config on parse error', () => {

@@ -19,7 +19,7 @@ function loadConfig(configPath = null) {
   return {
     ai: {
       command: 'copilot',
-      commandArgs: ['-m', 'gpt-4o-mini']
+      commandArgs: ['--model', 'gpt-5-mini']
     },
     instructionFiles: ['.github/copilot/COPILOT_INSTRUCTIONS.md'],
     memoryDirectory: '.memory'

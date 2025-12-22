@@ -5,7 +5,7 @@ const os = require('os');
 
 const DEFAULT_CONFIG = {
   command: 'copilot',
-  commandArgs: ['-m', 'gpt-4o-mini']
+  commandArgs: ['--model', 'gpt-5-mini']
 };
 
 const DEFAULT_PROMPTS = {

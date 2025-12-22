@@ -17,7 +17,7 @@
 **Issues Found**: 
 - ❌ Incorrect copilot command (`gh copilot` instead of `copilot`)
 - ❌ Hardcoded commands instead of config-driven
-- ❌ No model selection (should use gpt-4o-mini)
+- ❌ No model selection (should use gpt-5-mini)
 - ❌ Over-mocked tests that don't catch real integration issues
 
 **Next Steps**: Fix AI CLI configuration and add proper integration tests
@@ -130,7 +130,7 @@ This project consists of two main components:
   - [ ] Remove hardcoded `gh copilot` command
   - [ ] Remove duplicate prompt file creation logic (use shared utility)
   - [ ] Write integration test: `shouldSummarizeDiffWithRealCopilot` (conditional on copilot availability)
-  - [ ] Verify command uses gpt-4o-mini model
+  - [ ] Verify command uses gpt-5-mini model
   - [ ] Verify all tests pass
   - [ ] Commit: "behavioral: update aiCli to use configurable command builder"
 
@@ -213,20 +213,20 @@ This project consists of two main components:
   - **Issues Found**:
     - ❌ Uses incorrect command `gh copilot suggest` instead of just `copilot`
     - ❌ Hardcoded command in code instead of reading from config
-    - ❌ No model selection (should use gpt-4o-mini for cost efficiency)
+    - ❌ No model selection (should use gpt-5-mini for cost efficiency)
     - ❌ Tests are over-mocked and don't catch real integration issues
 
 #### 3.2.2 Configuration-Based AI CLI Support
 - [ ] **BEHAVIORAL** (TDD Cycle 15a): Configurable AI command execution
   - [ ] **Design Requirements**:
     - Config must support `command` field for base CLI executable (e.g., "copilot")
-    - Config must support optional `commandArgs` array for additional flags (e.g., ["-m", "gpt-4o-mini"])
+    - Config must support optional `commandArgs` array for additional flags (e.g., ["--model", "gpt-5-mini"])
     - Must allow full command string like "copilot -s --agent memory" to be split properly
-    - Default config should specify: `"command": "copilot"` with `"commandArgs": ["-m", "gpt-4o-mini"]`
+    - Default config should specify: `"command": "copilot"` with `"commandArgs": ["--model", "gpt-5-mini"]`
     - Config should be per-operation (summarize vs consolidate may use different args)
   - [ ] **Implementation Steps**:
     - [ ] Write failing test: `shouldExecuteConfiguredAICommandWithArgs`
-      - Test with command="copilot" and commandArgs=["-m", "gpt-4o-mini"]
+      - Test with command="copilot" and commandArgs=["--model", "gpt-5-mini"]
       - Test with command="copilot -s --agent memory" and no commandArgs
       - Test command building logic separately from execution
       - Mock child_process.execSync to verify exact command string constructed
@@ -244,15 +244,15 @@ This project consists of two main components:
       {
         "ai": {
           "command": "copilot",
-          "commandArgs": ["-m", "gpt-4o-mini"],
+          "commandArgs": ["--model", "gpt-5-mini"],
           "operations": {
             "summarize": {
               "prompt": "Review the attached diff...",
-              "commandArgs": ["-m", "gpt-4o-mini"]  // optional override
+              "commandArgs": ["--model", "gpt-5-mini"]  // optional override
             },
             "consolidate": {
               "prompt": "You are reviewing accumulated memories...",
-              "commandArgs": ["-m", "gpt-4o-mini"]
+              "commandArgs": ["--model", "gpt-5-mini"]
             }
           }
         }
@@ -267,7 +267,7 @@ This project consists of two main components:
     - Tests should actually invoke copilot with a small test prompt
     - Tests should verify prompt is passed correctly
     - Tests should verify response is received and parsed
-    - Tests should verify model argument is passed correctly (-m gpt-4o-mini)
+    - Tests should verify model argument is passed correctly (-m gpt-5-mini)
   - [ ] **Implementation Steps**:
     - [ ] Write integration test: `shouldInvokeCopilotWithRealCommand` (conditional)
       - Use `which copilot` or equivalent to check availability
@@ -276,7 +276,7 @@ This project consists of two main components:
       - Assert response is non-empty string
     - [ ] Write integration test: `shouldPassModelArgumentToCopilot`
       - Verify -m flag is included in command
-      - Verify gpt-4o-mini is specified
+      - Verify gpt-5-mini is specified
     - [ ] Write integration test: `shouldHandleMultilinePromptsCorrectly`
       - Test with prompt containing newlines
       - Test with prompt containing quotes

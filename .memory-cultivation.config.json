@@ -1,15 +1,15 @@
 {
   "ai": {
     "command": "copilot",
-    "commandArgs": ["-m", "gpt-4o-mini"],
+    "commandArgs": ["--model", "gpt-5-mini"],
     "operations": {
       "summarize": {
         "prompt": "Review the attached diff and write a brief summary of the changes, focusing on 2 types of changes: behavioral (new functionality) and structural (refactors, style changes, etc.)",
-        "commandArgs": ["-m", "gpt-4o-mini"]
+        "commandArgs": ["--model", "gpt-5-mini"]
       },
       "consolidate": {
         "prompt": "You are reviewing accumulated memories from code commits to help improve AI assistant instructions.\n\n**Task:**\nReview the memories and suggest specific additions or improvements to the instructions. Focus on:\n1. Patterns or practices that appear repeatedly\n2. New learnings that should be codified\n3. Specific technical approaches that should be documented\n\nProvide actionable suggestions that can be integrated into the instructions.",
-        "commandArgs": ["-m", "gpt-4o-mini"]
+        "commandArgs": ["--model", "gpt-5-mini"]
       }
     }
   },
