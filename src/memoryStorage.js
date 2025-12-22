@@ -60,6 +60,14 @@ function appendMemory(summary, timestamp) {
   }
   
   fs.writeFileSync(filePath, content, 'utf8');
+  
+  // Auto-stage the memory file
+  try {
+    execSync(`git add ${branchFile}`, { encoding: 'utf8' });
+  } catch (error) {
+    // Log warning but don't fail the hook
+    console.warn(`Warning: Failed to stage memory file: ${error.message}`);
+  }
 }
 
 function saveMemory(fileName, content) {

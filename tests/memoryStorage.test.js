@@ -145,4 +145,37 @@ First summary
       );
     });
   });
+
+  describe('TDD Cycle 6c: Auto-stage generated memory file', () => {
+    test('shouldStageMemoryFileAfterSaving', () => {
+      execSync.mockReturnValue('feature/auth\n');
+      fs.existsSync.mockReturnValue(false);
+      fs.writeFileSync.mockImplementation(() => {});
+      
+      const timestamp = new Date('2024-12-22T14:30:00');
+      memoryStorage.appendMemory('AI summary', timestamp);
+      
+      // Verify git add was called with the memory file
+      expect(execSync).toHaveBeenCalledWith(
+        expect.stringContaining('git add .memory/feature-auth.md'),
+        expect.any(Object)
+      );
+    });
+
+    test('shouldHandleGitAddErrors', () => {
+      execSync.mockImplementation((cmd) => {
+        if (cmd.includes('git add')) {
+          throw new Error('Git add failed');
+        }
+        return 'feature/auth\n';
+      });
+      fs.existsSync.mockReturnValue(false);
+      fs.writeFileSync.mockImplementation(() => {});
+      
+      const timestamp = new Date('2024-12-22T14:30:00');
+      
+      // Should not throw - hook should complete successfully
+      expect(() => memoryStorage.appendMemory('AI summary', timestamp)).not.toThrow();
+    });
+  });
 });
