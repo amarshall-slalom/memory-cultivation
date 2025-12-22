@@ -46,6 +46,32 @@ describe('Memory Storage Module', () => {
     });
   });
 
+  describe('TDD Cycle 6d: Error handling for branch-based storage', () => {
+    test('shouldThrowErrorWhenWriteFailsInAppendMode', () => {
+      execSync.mockReturnValue('feature/auth\n');
+      fs.existsSync.mockReturnValue(false);
+      fs.writeFileSync.mockImplementation(() => {
+        throw new Error('Disk full');
+      });
+      
+      const timestamp = new Date('2024-12-22T14:30:00');
+      
+      expect(() => memoryStorage.appendMemory('AI summary', timestamp)).toThrow('Disk full');
+    });
+
+    test('shouldThrowErrorWhenReadFailsInAppendMode', () => {
+      execSync.mockReturnValue('feature/auth\n');
+      fs.existsSync.mockReturnValue(true);
+      fs.readFileSync.mockImplementation(() => {
+        throw new Error('Cannot read file');
+      });
+      
+      const timestamp = new Date('2024-12-22T14:30:00');
+      
+      expect(() => memoryStorage.appendMemory('AI summary', timestamp)).toThrow('Cannot read file');
+    });
+  });
+
   describe('TDD Cycle 6a: Branch name retrieval and sanitization', () => {
     test('shouldGetCurrentBranchName', () => {
       execSync.mockReturnValue('feature/add-auth\n');
