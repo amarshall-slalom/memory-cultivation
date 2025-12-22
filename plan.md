@@ -2,25 +2,36 @@
 
 ## 📊 Implementation Status
 
-**Overall Progress**: MVP with bugs identified (Phases 1-2 complete, Phase 3 needs refactoring)
+**Overall Progress**: AI integration complete, ready for batch consolidation implementation
 
 ### Quick Summary:
 - ✅ **Phase 1**: Project Setup & Infrastructure (100% Complete - 4/4 tasks)
 - ✅ **Phase 2**: Pre-Commit Hook - Core Functionality (100% Complete - 11/11 TDD cycles)
-- ⚠️ **Phase 3**: Memory Cultivation Command (Needs Refactoring - 8/14 cycles, bugs found in AI integration)
-- ⏸️ **Phase 4**: Configuration & Flexibility (Template only - 1/4 tasks)
+- ⚠️ **Phase 3**: Memory Cultivation Command
+  - ✅ Phase 3.1: File Reading (3/3 cycles complete)
+  - ✅ Phase 3.2.1-3.2.2: AI CLI Integration (Cycles 15a-15b complete, real copilot working)
+  - 🔄 **NEXT**: Phase 3.2c: Small refactor (Cycle 15c)
+  - 📋 **DESIGNED**: Phase 3.2a: Batch Consolidation (Cycles 16-21, ready to implement)
+  - ⏸️ Phase 3.3-3.4: User Interaction & File Updates (deferred - batch approach replaces this)
+- ⏸️ **Phase 4**: Configuration & Flexibility (Config system working, may need model selection additions)
 - ✅ **Phase 5**: Documentation & Polish (100% Complete - 3/3 tasks)
-- ⏸️ **Phase 6**: Final Testing & Validation (Needs real integration tests)
+- ⏸️ **Phase 6**: Final Testing & Validation (Integration tests working, need cultivation E2E tests)
 
-**Total**: 27 items completed (some buggy), 3 new cycles identified, 14 items deferred
+**Total**: 
+- 30 items completed
+- 6 new cycles designed (batch consolidation)
+- Phase 3.2a fully specified and ready for TDD implementation
 
-**Issues Found**: 
-- ❌ Incorrect copilot command (`gh copilot` instead of `copilot`)
-- ❌ Hardcoded commands instead of config-driven
-- ❌ No model selection (should use gpt-5-mini)
-- ❌ Over-mocked tests that don't catch real integration issues
+**Recent Fixes**: 
+- ✅ Fixed AI model to gpt-5-mini
+- ✅ Fixed copilot flag from `-m` to `--model`
+- ✅ Real integration tests passing with actual copilot CLI
+- ✅ Pre-commit hook using real AI summaries (not placeholders)
+- ✅ Cleaned up all placeholder memory files
 
-**Next Steps**: Fix AI CLI configuration and add proper integration tests
+**Next Steps**: 
+1. Small refactor (Cycle 15c) - Update aiConsolidation.js to use command builder
+2. Implement batch consolidation (Cycles 16-21) - Progressive memory consolidation with user approval
 
 ---
 
@@ -287,15 +298,244 @@ This project consists of two main components:
     - [ ] Commit: "behavioral: integrate configurable command builder into AI modules"
 
 - [ ] **STRUCTURAL** (TDD Cycle 15c): Refactor and cleanup
-  - [ ] Extract prompt file creation/cleanup into reusable utility
-  - [ ] Remove duplicate command execution logic
+  - [ ] Update `src/aiConsolidation.js` to use configurable command builder (still has hardcoded `gh copilot`)
+  - [ ] Extract prompt file creation/cleanup into reusable utility (already in aiCommandBuilder but may need refinement)
+  - [ ] Remove any remaining duplicate command execution logic
   - [ ] Improve error messages to show exact command that failed
   - [ ] Add logging option to show AI commands being executed (debug mode)
   - [ ] Verify all tests still pass
   - [ ] Run linter and fix issues
   - [ ] Commit: "structural: refactor AI command execution for reusability"
 
-- [ ] **BEHAVIORAL** (TDD Cycle 16): Identify outdated information ⏸️ **DEFERRED**
+### 3.2a AI-Powered Batch Consolidation (NEW)
+
+#### Design Overview: Progressive Memory Consolidation
+
+**Problem**: When 100+ memory files accumulate, processing them all at once:
+- Burns through API credits unnecessarily
+- Produces overwhelming output for user to review
+- Doesn't scale well
+
+**Solution**: Binary tree batch consolidation approach
+- Process memories in batches of ≤20
+- Use recursive halving for larger sets
+- User approves each consolidation
+- Creates intermediate consolidated files
+- Final pass suggests instruction improvements
+
+**Example Flow (100 memories)**:
+```
+100 memories → split → 50 oldest
+50 memories → split → 25 oldest  
+25 memories → split → 13 oldest
+13 memories → ✓ consolidate → consolidated-001.md (user approves)
+Repeat for next 13 → consolidated-002.md
+...continues until all processed
+Result: 8 consolidated files + original memories deleted
+Final pass: Analyze 8 consolidated files for instruction suggestions
+```
+
+#### Configuration Requirements
+
+```json
+{
+  "ai": {
+    "command": "copilot",
+    "commandArgs": ["--model", "gpt-5-mini"],
+    "operations": {
+      "summarize": {
+        "model": "gpt-5-mini",  // Fast, cheap for commit diffs
+        "prompt": "Review the attached diff..."
+      },
+      "consolidate-batch": {
+        "model": "gpt-4o",      // More powerful for batch consolidation
+        "prompt": "You are consolidating multiple memory summaries from commits. Synthesize these memories into a single coherent summary that captures: 1) Key behavioral changes, 2) Important structural patterns, 3) Technical decisions made. Be concise but preserve important details."
+      },
+      "consolidate-final": {
+        "model": "gpt-4o",      // Most powerful for instruction suggestions
+        "prompt": "You are reviewing consolidated memories to improve AI assistant instructions. Analyze patterns and suggest specific, actionable improvements to the instructions."
+      }
+    }
+  },
+  "cultivation": {
+    "batchSize": 20,            // Max memories per consolidation batch
+    "autoCommit": false,
+    "consolidatedFilePrefix": "consolidated-"
+  }
+}
+```
+
+**Note**: Model selection preference: "gpt-4o" or "claude-sonnet-4-5" (user configurable)
+
+- [ ] **BEHAVIORAL** (TDD Cycle 16): Batch splitting logic
+  - [ ] **Design Requirements**:
+    - Given N memory files, determine optimal batches
+    - If N ≤ batchSize (20): return single batch
+    - If N > batchSize: use binary tree approach
+      - Take oldest ceil(N/2) memories
+      - Recursively split if still > batchSize
+      - Continue until batch ≤ batchSize
+    - Return array of batches with file paths
+  - [ ] **Implementation Steps**:
+    - [ ] Create `src/batchConsolidator.js` module
+    - [ ] Write failing test: `shouldReturnSingleBatchWhenUnderLimit`
+      - Input: 15 memory files, batchSize: 20
+      - Expected: Single batch with all 15 files
+    - [ ] Write failing test: `shouldSplitInHalfWhenOverLimit`
+      - Input: 40 memory files, batchSize: 20
+      - Expected: First batch has 20 oldest files
+    - [ ] Write failing test: `shouldRecursivelySplitLargeSets`
+      - Input: 100 memory files, batchSize: 20
+      - Expected: Multiple batches, none exceeding 20
+      - Verify oldest memories processed first
+    - [ ] Implement `getBatches(memoryFiles, batchSize)` function
+      - Sort files by timestamp (oldest first)
+      - Recursive splitting logic
+      - Return array of batch objects: `[{files: [...], batchNumber: 1}, ...]`
+    - [ ] Verify all tests pass
+    - [ ] Commit: "behavioral: add batch splitting logic for memory consolidation"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 17): Batch consolidation with AI
+  - [ ] Write failing test: `shouldConsolidateBatchUsingConfiguredModel`
+    - Mock aiCommandBuilder.executeAICommand
+    - Verify it uses 'consolidate-batch' operation
+    - Verify correct model from config
+    - Verify batch memories passed to prompt
+  - [ ] Write failing test: `shouldHandleConsolidationErrors`
+    - Test AI failure scenarios
+    - Should return error message, not crash
+  - [ ] Implement `consolidateBatch(batchFiles, config)` function
+    - Read all memory files in batch
+    - Build consolidation prompt
+    - Call aiCommandBuilder with 'consolidate-batch' operation
+    - Return consolidated text
+  - [ ] Verify tests pass
+  - [ ] Commit: "behavioral: add AI batch consolidation capability"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 18): Save consolidated memories
+  - [ ] Write failing test: `shouldSaveConsolidatedMemoryWithTimestamp`
+    - Verify file saved to .memory/ directory
+    - Verify naming: consolidated-{timestamp}.md
+    - Verify content includes metadata (original file count, date range)
+  - [ ] Write failing test: `shouldIncludeMetadataInConsolidatedFile`
+    - Verify header includes: number of memories, date range, consolidation timestamp
+  - [ ] Implement `saveConsolidatedMemory(content, originalFiles, timestamp)` function
+    - Generate filename with timestamp
+    - Add metadata header
+    - Write to .memory/ directory
+    - Return filename
+  - [ ] Verify tests pass
+  - [ ] Commit: "behavioral: save consolidated memory files with metadata"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 19): Interactive batch approval workflow
+  - [ ] Write failing test: `shouldPromptUserForBatchApproval`
+    - Mock readline interface
+    - Verify consolidation shown to user
+    - Verify approval prompt appears
+  - [ ] Write failing test: `shouldHandleUserApproval`
+    - User types 'y': Delete originals, save consolidated
+    - User types 'n': Skip batch, keep originals
+  - [ ] Write failing test: `shouldAllowUserToWriteOwnSummary`
+    - User types 'edit': Prompt for custom summary
+    - Save custom summary as consolidated file
+    - Delete originals
+  - [ ] Write failing test: `shouldHandleUserRetry`
+    - User types 'retry': Re-run AI consolidation
+    - Show new result
+  - [ ] Implement interactive approval in `batchConsolidator.js`
+    - Function: `promptForApproval(consolidatedText, batchInfo)`
+    - Options: 'y' (approve), 'n' (skip), 'edit' (write own), 'retry' (regenerate)
+    - Return: {approved: boolean, customText: string|null, action: 'approve'|'skip'|'retry'}
+  - [ ] Verify tests pass
+  - [ ] Commit: "behavioral: add interactive batch approval workflow"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 20): Integrate batch consolidation into cultivate command
+  - [ ] Write integration test: `shouldRunBatchConsolidationBeforeFinal`
+    - Set up scenario with 50 memory files
+    - Verify batches created
+    - Verify user prompted for each batch
+    - Verify consolidated files created
+    - Verify original files deleted (when approved)
+  - [ ] Update `bin/cultivate.js`:
+    - [ ] Add batch consolidation phase before final consolidation
+    - [ ] Check memory count at start
+    - [ ] If > batchSize: Run batch consolidation loop
+      - Get batches from batchConsolidator
+      - For each batch:
+        - Show batch info (e.g., "Batch 1/8: consolidating 13 memories from Dec 1-5")
+        - Call consolidateBatch()
+        - Show result to user
+        - Prompt for approval
+        - Handle user response (approve/skip/edit/retry)
+        - If approved: save consolidated, delete originals
+    - [ ] Continue to existing final consolidation with remaining files
+  - [ ] Verify integration test passes
+  - [ ] Manual testing with real memory files
+  - [ ] Commit: "behavioral: integrate batch consolidation into cultivate workflow"
+
+- [ ] **STRUCTURAL** (TDD Cycle 21): Refactor and polish batch consolidation
+  - [ ] Extract common prompt building logic
+  - [ ] Add progress indicators (e.g., "Processing batch 3/8...")
+  - [ ] Improve error messages
+  - [ ] Add dry-run mode (show what would happen without executing)
+  - [ ] Verify all tests still pass
+  - [ ] Run linter and fix issues
+  - [ ] Commit: "structural: refactor batch consolidation for clarity"
+
+#### File Naming Convention
+- Original memories: `.memory/{commit-hash}-{date}.md`
+- Consolidated batches: `.memory/consolidated-{timestamp}.md`
+- Consolidated files are treated as first-class memories in subsequent passes
+- User can manually review/edit consolidated files before final pass
+
+#### User Experience Flow
+
+```
+$ npm run cultivate
+
+=== Memory Cultivation ===
+
+Found 100 memory files
+
+Phase 1: Batch Consolidation
+-----------------------------
+You have more than 20 memories. Let's consolidate them in batches.
+
+Batch 1/8: Consolidating 13 memories (Dec 1-5, 2024)
+[AI generates consolidation...]
+
+=== Batch 1 Consolidation ===
+Behavioral changes:
+- Implemented JWT authentication
+- Added password reset flow
+...
+
+Structural changes:
+- Refactored auth module for clarity
+- Renamed userId → userID pattern
+...
+
+Options:
+  y - Approve consolidation (delete 13 originals, save consolidated)
+  n - Skip this batch (keep originals)
+  edit - Write your own summary
+  retry - Regenerate with AI
+
+Your choice: y
+
+✓ Batch 1 consolidated → .memory/consolidated-1734901234.md
+  Deleted 13 original memory files
+
+[Continues for remaining batches...]
+
+Phase 2: Final Analysis
+-----------------------
+Analyzing 8 consolidated memories for instruction improvements...
+
+[Shows final suggestions...]
+```
+
+- [ ] **BEHAVIORAL** (TDD Cycle 16-OLD): Identify outdated information ⏸️ **DEFERRED**
   - [ ] Write failing test: `shouldIdentifyOutdatedInstructionContent`
   - [ ] Implement AI call to identify outdated/incorrect information in instructions
   - [ ] Verify test passes
