@@ -66,20 +66,24 @@ git push origin <branch-name>
 # git push origin feature/branch-based-memory
 ```
 
-#### 6. Wait for User
+#### 6. Create Pull Request
+```bash
+# Create PR using GitHub CLI
+gh pr create --title "Brief description" --body "Detailed description" --base main --head <branch-name>
+```
+
+#### 7. Wait for User
 **STOP HERE** - Do not continue to next section
 
-- User will create PR
 - User will review and merge to main
 - User will notify when merged
 
 **Do NOT**:
-- Create the PR yourself
-- Merge to main yourself
+- Merge to main yourself (CRITICAL: Human must approve and merge)
 - Start next section before user confirms merge
 - Continue work on the feature branch after push
 
-#### 7. After User Confirms Merge
+#### 8. After User Confirms Merge
 Only after user says "merged" or "integrated to main":
 
 ```bash
