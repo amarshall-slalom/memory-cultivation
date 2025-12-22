@@ -1,5 +1,6 @@
 const memoryStorage = require('../src/memoryStorage');
 const fs = require('fs');
+const { execSync } = require('child_process');
 
 jest.mock('fs');
 jest.mock('child_process');
@@ -42,6 +43,41 @@ describe('Memory Storage Module', () => {
       });
       
       expect(() => memoryStorage.saveMemory(fileName, content)).toThrow('Permission denied');
+    });
+  });
+
+  describe('TDD Cycle 6a: Branch name retrieval and sanitization', () => {
+    test('shouldGetCurrentBranchName', () => {
+      execSync.mockReturnValue('feature/add-auth\n');
+      
+      const branchFile = memoryStorage.getBranchFileName();
+      
+      expect(execSync).toHaveBeenCalledWith('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' });
+      expect(branchFile).toBe('.memory/feature-add-auth.md');
+    });
+
+    test('shouldSanitizeBranchNameForFilesystem', () => {
+      execSync.mockReturnValue('bugfix/issue-#123\n');
+      
+      const branchFile = memoryStorage.getBranchFileName();
+      
+      expect(branchFile).toBe('.memory/bugfix-issue-123.md');
+    });
+
+    test('shouldSkipMainBranch', () => {
+      execSync.mockReturnValue('main\n');
+      
+      const branchFile = memoryStorage.getBranchFileName();
+      
+      expect(branchFile).toBeNull();
+    });
+
+    test('shouldSkipMasterBranch', () => {
+      execSync.mockReturnValue('master\n');
+      
+      const branchFile = memoryStorage.getBranchFileName();
+      
+      expect(branchFile).toBeNull();
     });
   });
 });
