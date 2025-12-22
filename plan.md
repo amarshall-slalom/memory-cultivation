@@ -100,6 +100,22 @@ This project consists of two main components:
   - [x] Verify all tests pass
   - [x] Commit: "behavioral: handle empty git diff gracefully"
 
+- [ ] **BEHAVIORAL** (TDD Cycle 2a): Exclude markdown files from diff ⏸️ **NEW REQUIREMENT**
+  - [ ] Write failing test: `shouldExcludeMarkdownFilesFromDiff`
+    - Stage changes including .md files
+    - Fetch diff with exclusion
+    - Verify .md file changes not in result
+    - Verify non-.md changes ARE in result
+  - [ ] Write failing test: `shouldHandleAllMarkdownVariations`
+    - Test: README.md, plan.md, spec.md, docs/guide.md
+    - All should be excluded
+  - [ ] Implement `getStagedDiff({ excludePatterns: ['*.md'] })` in gitDiff.js
+    - Use git diff with pathspec exclusion: `git diff --cached -- . ':(exclude)*.md'`
+    - Return filtered diff
+  - [ ] Update all callers to use exclusion
+  - [ ] Verify tests pass
+  - [ ] Commit: "behavioral: exclude markdown files from memory diff"
+
 - [x] **STRUCTURAL**: Refactor if needed ✅ **COMPLETED** (No refactor needed - code was clean)
   - [x] Extract duplicated code if any
   - [x] Improve naming for clarity
@@ -146,23 +162,99 @@ This project consists of two main components:
   - [ ] Commit: "behavioral: update aiCli to use configurable command builder"
 
 ### 2.3 File Naming & Storage Module
-- [x] **BEHAVIORAL** (TDD Cycle 6): Test commit hash retrieval ✅ **COMPLETED**
-  - [x] Write failing test: `shouldGenerateFileNameWithCommitHashAndDate`
-  - [x] Implement file naming function (use current/staged commit info)
-  - [x] Verify test passes
-  - [x] Commit: "behavioral: generate memory file names with commit hash and date"
 
-- [x] **BEHAVIORAL** (TDD Cycle 7): Test file saving ✅ **COMPLETED** (Included in Cycle 6 commit)
-  - [x] Write failing test: `shouldSaveAIOutputToMemoryDirectory`
-  - [x] Implement file writing to `.memory/` directory
-  - [x] Verify test passes
-  - [x] Commit: "behavioral: save AI summaries to .memory directory"
+#### 2.3.1 Original Implementation (DEPRECATED - Commit-based naming had issues)
+- [x] **BEHAVIORAL** (TDD Cycle 6): Test commit hash retrieval ✅ **COMPLETED BUT BUGGY**
+  - Issues found: Hash retrieved from wrong commit, file not auto-staged, caused orphaned files
+  - Replaced by branch-based approach (see 2.3.2)
 
-- [x] **BEHAVIORAL** (TDD Cycle 8): Handle file system errors ✅ **COMPLETED** (Included in Cycle 6 commit)
-  - [x] Write failing test: `shouldHandleFileSystemErrorsGracefully`
-  - [x] Implement error handling for file operations
-  - [x] Verify all tests pass
-  - [x] Commit: "behavioral: handle file system errors in memory storage"
+- [x] **BEHAVIORAL** (TDD Cycle 7): Test file saving ✅ **COMPLETED**
+- [x] **BEHAVIORAL** (TDD Cycle 8): Handle file system errors ✅ **COMPLETED**
+
+#### 2.3.2 Branch-Based Memory Files (NEW - Fixes commit hash issues)
+
+**Design Overview**: 
+- **Problem with commit-based**: Hash timing issues, orphaned files, one file per commit
+- **Solution**: Branch-based naming, append mode, skip main branch
+- **Benefits**: 
+  - One memory file per feature branch tells complete story
+  - No hash timing issues
+  - Auto-stages cleanly
+  - Prevents pollution of main branch with memory files
+
+**File Naming**: `.memory/<sanitized-branch-name>.md`
+- Examples: `feature/auth` → `feature-auth.md`, `bugfix/login` → `bugfix-login.md`
+- Sanitization: Replace `/` with `-`, remove special chars
+
+**File Format**: Single file with append mode
+```markdown
+# Memory for branch: feature/auth
+
+## Commit 1 - 2024-12-22 14:30:00
+[Summary from first commit]
+
+---
+
+## Commit 2 - 2024-12-22 15:45:00
+[Summary from second commit]
+
+---
+```
+
+- [ ] **BEHAVIORAL** (TDD Cycle 6a): Branch name retrieval and sanitization
+  - [ ] Write failing test: `shouldGetCurrentBranchName`
+    - Mock git command: `git rev-parse --abbrev-ref HEAD`
+    - Verify returns branch name
+  - [ ] Write failing test: `shouldSanitizeBranchNameForFilesystem`
+    - Input: `feature/add-auth` → Output: `feature-add-auth`
+    - Input: `bugfix/issue-#123` → Output: `bugfix-issue-123`
+    - Test special character removal
+  - [ ] Write failing test: `shouldSkipMainBranch`
+    - When branch is `main` or `master`, return null (signal to skip)
+  - [ ] Implement `getBranchFileName()` in memoryStorage.js
+    - Get current branch name
+    - Sanitize for filesystem
+    - Return `.memory/{sanitized-branch}.md` or null if main
+  - [ ] Verify tests pass
+  - [ ] Commit: "behavioral: generate memory file names from branch name"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 6b): Append mode for existing branch memory
+  - [ ] Write failing test: `shouldCreateNewFileForFirstCommitOnBranch`
+    - File doesn't exist: Create with header
+    - Verify format: `# Memory for branch: {branch}\n\n## Commit 1...`
+  - [ ] Write failing test: `shouldAppendToExistingBranchMemory`
+    - File exists: Append new entry with separator
+    - Verify separator: `\n---\n\n## Commit N...`
+    - Verify original content preserved
+  - [ ] Write failing test: `shouldIncludeTimestampInEachEntry`
+    - Each commit entry has timestamp
+    - Format: `## Commit N - YYYY-MM-DD HH:MM:SS`
+  - [ ] Implement `appendMemory(branchFile, summary, timestamp)` in memoryStorage.js
+    - Check if file exists
+    - If new: Create with header
+    - If exists: Append with separator
+    - Include commit counter (parse existing file to count commits)
+  - [ ] Verify tests pass
+  - [ ] Commit: "behavioral: append mode for branch-based memory files"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 6c): Auto-stage generated memory file
+  - [ ] Write failing test: `shouldStageMemoryFileAfterSaving`
+    - After saving, verify `git add .memory/{branch}.md` is called
+    - Mock execSync to verify command executed
+  - [ ] Write failing test: `shouldHandleGitAddErrors`
+    - If git add fails, log warning but don't fail hook
+    - Hook should complete successfully even if staging fails
+  - [ ] Implement auto-staging in memoryStorage.js
+    - After writing file, call `git add .memory/{branch}.md`
+    - Wrap in try-catch to handle errors gracefully
+  - [ ] Verify tests pass
+  - [ ] Commit: "behavioral: auto-stage memory files after generation"
+
+- [ ] **BEHAVIORAL** (TDD Cycle 6d): Handle file system errors
+  - [ ] Tests already exist from Cycle 8
+  - [ ] Verify error handling works with append mode
+  - [ ] Update tests if needed for branch-based approach
+  - [ ] Commit: "behavioral: update error handling for branch-based storage"
 
 ### 2.4 Cultivate Commit Detection
 - [x] **BEHAVIORAL** (TDD Cycle 9): Detect cultivate commits ✅ **COMPLETED**
@@ -323,7 +415,13 @@ This project consists of two main components:
 - Creates intermediate consolidated files
 - Final pass suggests instruction improvements
 
-**Example Flow (100 memories)**:
+**Note on Branch-Based Memories**: 
+- With branch-based naming, you'll have fewer files but each file may be VERY long
+- A single feature branch could have 50+ commits → one huge `.memory/feature-auth.md` file
+- Batching still applies: Split the commit entries within the file into batches
+- Or treat each branch memory file as a single "memory" for consolidation purposes
+
+**Example Flow (100 memory files OR 100 commit entries across 5 branch files)**:
 ```
 100 memories → split → 50 oldest
 50 memories → split → 25 oldest  

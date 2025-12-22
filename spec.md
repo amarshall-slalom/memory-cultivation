@@ -4,22 +4,86 @@ This is a tool in 2 parts:
 
 ## Git Pre-Commit Hook Script
 ### Script Flow
-1. The current diff is fetched
-2. A one-shot call to the AI cli is made with a lightweight model (gpt-5-mini)
-3. The output is saved to a file in the .memory directory
+1. Check current branch name
+   - If on `main` branch: Skip memory generation (no memory for main)
+   - If on feature branch: Continue
+2. Exclude `.md` files from the diff (plan.md, spec.md, README.md, etc.)
+   - Reason: Prevents AI from hallucinating features that are only planned/documented
+   - Markdown files will be reviewed separately during cultivation
+3. Fetch the filtered diff (staged changes, excluding `.md` files)
+4. A one-shot call to the AI CLI is made with a lightweight model (gpt-5-mini)
+5. The output is appended to or creates `.memory/<branch-name>.md`
+   - First commit on branch: Create new file with header
+   - Subsequent commits: Append to existing file with timestamp separator
+
 ### Requirements
 * An AI cli (copilot, gemini, kiro, claude)
-* A githook installer (like husky or a maven plugin)
-### AI CLI prompt
+* A git hook installer (like husky or a maven plugin)
+* Must NOT run on `main` branch
+* Must exclude `.md` files from diff analysis
+
+### AI CLI Prompt
 ```
 Review the attached diff and write a brief summary of the changes, focusing on 2 types of changes: behavioral (new functionality) and structural (refactors, style changes, etc.)
 ```
-### File name scheme
-`<commit-hash>-<commit-date>.md`
+
+### File Naming Scheme
+**Branch-based naming**: `.memory/<branch-name>.md`
+
+**Examples**:
+- Working on `feature/auth` → `.memory/feature-auth.md`
+- Working on `bugfix/login` → `.memory/bugfix-login.md`
+- Working on `main` → No memory file created
+
+**File Format** (single file, append mode):
+```markdown
+# Memory for branch: feature/auth
+
+## Commit 1 - 2024-12-22 14:30:00
+
+### Behavioral Changes
+- Added JWT token validation
+
+### Structural Changes
+- Refactored auth module
+
+---
+
+## Commit 2 - 2024-12-22 15:45:00
+
+### Behavioral Changes
+- Implemented password reset flow
+
+### Structural Changes
+- Extracted email service
+
+---
+```
+
+**Sanitization**: Branch names are sanitized for filesystem:
+- Forward slashes `/` → hyphens `-`
+- Special characters removed/replaced
+- Example: `feature/add-auth` → `feature-add-auth.md`
+
 ### Additional Requirements
-* Given: the cultivate script has run
-  * When: the commit for a cultivate contains only instruction updates and .memory file removals
-  * Then: there is no need to create a new memory, so the pre-commit should pass without running
+
+**Skip Conditions**:
+* Branch is `main` (or `master`) → Skip entirely
+* Commit only touches `.memory/` files → Skip (cultivate commit)
+* Commit only touches instruction files + `.memory/` → Skip (cultivate commit)
+* No staged changes (after excluding `.md` files) → Skip
+
+**Memory File Lifecycle**:
+* Created on first commit to a feature branch
+* Appended to on each subsequent commit
+* Accumulates the entire branch's development story
+* Cleaned up during cultivation (user decides to delete or consolidate)
+
+**Markdown File Handling**:
+* `.md` files are EXCLUDED from diff sent to AI for memory generation
+* `.md` files ARE included in cultivation analysis
+  - Cultivation reads all markdown files in repo (spec.md, plan.md, README.md, etc.)
+  - AI can suggest updates to documentation based on code changes captured in memories
 
 ## Memory Cultivation
 ### Initial Integration
