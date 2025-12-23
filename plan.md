@@ -77,6 +77,30 @@ This file contains in-progress and future work. See [plan-completed.md](./plan-c
   - [x] Run linter (clean)
   - [x] Commit: "structural: refactor aiConsolidation to use command builder" (fa5aad3)
 
+#### 3.2.3 Test Performance Optimization
+- [ ] **CHORE** (Cycle 15.5): Speed up unit tests by mocking AI calls
+  - [ ] **Problem**: Unit tests calling real GitHub Copilot AI (slow)
+    - aiConsolidation.test.js: 55.5s (3 tests)
+    - aiCli.test.js: 14s (2 tests)
+    - Total: ~70s of unnecessary AI calls
+  - [ ] **Solution**: Mock aiCommandBuilder.executeAICommand() in unit tests
+  - [ ] **Steps**:
+    - [ ] Add jest.mock('../src/aiCommandBuilder') to aiConsolidation.test.js
+    - [ ] Mock executeAICommand to return fake AI responses
+    - [ ] Update 3 tests to verify logic without real AI calls
+    - [ ] Add jest.mock('../src/aiCommandBuilder') to aiCli.test.js
+    - [ ] Mock executeAICommand to return fake summaries
+    - [ ] Update 2 tests to verify logic without real AI calls
+    - [ ] Verify aiCommandBuilder.integration.test.js still calls real AI
+    - [ ] Run full test suite (all 54 tests should pass)
+    - [ ] Verify total time drops from ~56s to ~15-20s
+    - [ ] Run linter
+  - [ ] **Expected Results**:
+    - Unit tests: 70s → 2s (35x faster)
+    - Integration tests: 42s (unchanged, intentionally slow)
+    - Total: 56s → 15-20s (2-3x faster)
+  - [ ] Commit: "chore: mock AI calls in unit tests for faster execution"
+
 ### 3.2a AI-Powered Batch Consolidation (NEW)
 
 #### Design Overview: Progressive Memory Consolidation
