@@ -496,6 +496,66 @@ Analyzing 8 consolidated memories for instruction improvements...
 
 ---
 
+## Phase 7: Memory Regeneration Tool
+
+### 7.1 Manual Memory Recovery
+When memories are missed (e.g., PR merged without hook running, manual commits to main), users need a way to retroactively generate memories.
+
+- [ ] **BEHAVIORAL** (TDD Cycle): Generate memory from commit hash
+  - [ ] Write failing test: `shouldGenerateMemoryFromCommitHash`
+    - Test with commit hash on main branch
+    - Verify diff extracted correctly
+    - Verify AI summarization called
+    - Verify memory saved to user-specified filename
+  - [ ] Write failing test: `shouldExcludeMarkdownFilesFromCommitDiff`
+    - Verify MD files filtered out per existing rules
+    - Verify only code changes included in diff
+  - [ ] Write failing test: `shouldRequireUserToSpecifyFilename`
+    - Test that filename parameter is required
+    - Test that filename is saved to .memory/ directory
+    - Test that filename validation (no path traversal)
+  - [ ] Implement `npm run remember -- --commit <hash> --name <filename>`
+    - Get commit diff from git (main branch only)
+    - Filter out MD files and non-code changes
+    - Call AI summarization (reuse existing logic)
+    - Save to `.memory/<filename>.md`
+    - Validate filename (alphanumeric, hyphens, underscores only)
+  - [ ] Write failing test: `shouldSupportPRNumberLookup`
+    - User provides `--pr <number>` instead of commit hash
+    - Lookup merge commit for that PR
+    - Generate memory from merge commit
+  - [ ] Implement PR number support
+    - Use `gh pr view <number> --json mergeCommit`
+    - Extract commit hash
+    - Proceed with commit-based flow
+  - [ ] Verify all tests pass
+  - [ ] Commit: "behavioral: add memory regeneration tool for missed commits"
+
+- [ ] **STRUCTURAL**: Add usage documentation
+  - [ ] Update README with memory regeneration examples
+  - [ ] Add error messages for invalid inputs
+  - [ ] Document use cases (manual commits, missed PRs, etc)
+  - [ ] Commit: "structural: document memory regeneration feature"
+
+**Use Cases:**
+- PR merged but hook didn't run
+- Manual commits pushed directly to main
+- Want to create memory for specific historical commit
+- Migrating to memory-cultivation tool (backfill old commits)
+
+**Example Usage:**
+```bash
+# Generate from commit hash
+npm run remember -- --commit abc123 --name fix-auth-bug
+
+# Generate from PR number
+npm run remember -- --pr 42 --name feature-user-profiles
+
+# Result: Creates .memory/fix-auth-bug.md with AI summary
+```
+
+---
+
 ## Future Enhancements (Post-MVP)
 - Support additional AI CLIs (Claude, Gemini, Kiro)
 - More granular control over instruction file patterns
@@ -503,6 +563,7 @@ Analyzing 8 consolidated memories for instruction improvements...
 - Analytics on memory accumulation and cultivation patterns
 - Automated instruction file optimization suggestions
 - Multi-language support for prompts
+- Batch memory regeneration (multiple commits at once)
 
 ---
 
