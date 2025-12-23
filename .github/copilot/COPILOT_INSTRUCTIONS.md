@@ -78,3 +78,24 @@ When approaching a new feature:
 Follow this process precisely, always prioritizing clean, well-tested code over quick implementation.
 
 Always write one test at a time, make it run, then improve structure. Always run all the tests each time.
+
+# GIT WORKFLOW
+
+**CRITICAL: Use Sequential Workflow Script**
+
+Always use `./bin/git-workflow.sh` instead of separate git commands to prevent race conditions:
+
+```bash
+# Commit and push only (existing PR)
+./bin/git-workflow.sh -m "commit message"
+
+# Commit, push, and create PR
+./bin/git-workflow.sh -m "commit message" --title "PR title" --body "PR body"
+```
+
+**DO NOT** run `git add`, `git commit`, `git push`, and `gh pr create` as separate parallel tool calls. The script ensures sequential execution to prevent changes being left on local only.
+
+### Commit Message Formats
+- `behavioral:` for new functionality
+- `structural:` for refactoring/reorganization  
+- `chore:` for maintenance tasks (tests, docs, scripts)
