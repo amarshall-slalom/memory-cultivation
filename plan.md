@@ -136,11 +136,11 @@ Final pass: Analyze 8 consolidated files for instruction suggestions
         "prompt": "Review the attached diff..."
       },
       "consolidate-batch": {
-        "model": "gpt-4o",      // More powerful for batch consolidation
+        "model": "gpt-5",      // More powerful for batch consolidation
         "prompt": "You are consolidating multiple memory summaries from commits. Synthesize these memories into a single coherent summary that captures: 1) Key behavioral changes, 2) Important structural patterns, 3) Technical decisions made. Be concise but preserve important details."
       },
       "consolidate-final": {
-        "model": "gpt-4o",      // Most powerful for instruction suggestions
+        "model": "gpt-5",      // Most powerful for instruction suggestions
         "prompt": "You are reviewing consolidated memories to improve AI assistant instructions. Analyze patterns and suggest specific, actionable improvements to the instructions."
       }
     }
@@ -153,35 +153,19 @@ Final pass: Analyze 8 consolidated files for instruction suggestions
 }
 ```
 
-**Note**: Model selection preference: "gpt-4o" or "claude-sonnet-4-5" (user configurable)
+**Note**: Model selection preference: "gpt-5" or "claude-sonnet-4-5" (user configurable)
 
-- [ ] **BEHAVIORAL** (TDD Cycle 16): Batch splitting logic
-  - [ ] **Design Requirements**:
-    - Given N memory files, determine optimal batches
-    - If N ≤ batchSize (20): return single batch
-    - If N > batchSize: use binary tree approach
-      - Take oldest ceil(N/2) memories
-      - Recursively split if still > batchSize
-      - Continue until batch ≤ batchSize
-    - Return array of batches with file paths
-  - [ ] **Implementation Steps**:
-    - [ ] Create `src/batchConsolidator.js` module
-    - [ ] Write failing test: `shouldReturnSingleBatchWhenUnderLimit`
-      - Input: 15 memory files, batchSize: 20
-      - Expected: Single batch with all 15 files
-    - [ ] Write failing test: `shouldSplitInHalfWhenOverLimit`
-      - Input: 40 memory files, batchSize: 20
-      - Expected: First batch has 20 oldest files
-    - [ ] Write failing test: `shouldRecursivelySplitLargeSets`
-      - Input: 100 memory files, batchSize: 20
-      - Expected: Multiple batches, none exceeding 20
-      - Verify oldest memories processed first
-    - [ ] Implement `getBatches(memoryFiles, batchSize)` function
-      - Sort files by timestamp (oldest first)
-      - Recursive splitting logic
-      - Return array of batch objects: `[{files: [...], batchNumber: 1}, ...]`
-    - [ ] Verify all tests pass
-    - [ ] Commit: "behavioral: add batch splitting logic for memory consolidation"
+- [x] **BEHAVIORAL** (TDD Cycle 16): Batch splitting logic ✅ **COMPLETED**
+  - [x] Create `src/batchConsolidator.js` module
+  - [x] Write failing test: `shouldReturnSingleBatchWhenUnderLimit`
+  - [x] Write failing test: `shouldSplitInHalfWhenOverLimit`
+  - [x] Write failing test: `shouldRecursivelySplitLargeSets`
+  - [x] Implement `getBatches(memoryFiles, batchSize)` function
+    - Returns single batch if files ≤ batchSize
+    - Splits into batches of max batchSize
+    - Returns array of batch objects with files and batchNumber
+  - [x] All 59 tests pass
+  - [x] Commit: "behavioral: add batch splitting logic for memory consolidation" (acceb98)
 
 - [ ] **BEHAVIORAL** (TDD Cycle 17): Batch consolidation with AI
   - [ ] Write failing test: `shouldConsolidateBatchUsingConfiguredModel`
