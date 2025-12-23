@@ -62,7 +62,44 @@ function consolidateBatch(batchFiles, config) {
   }
 }
 
+function saveConsolidatedMemory(content, originalFiles, timestamp) {
+  const ts = timestamp || Date.now();
+  const filename = `.memory/consolidated-${ts}.md`;
+  
+  // Extract dates from filenames
+  const datePattern = /(\d{4}-\d{2}-\d{2})/;
+  const dates = originalFiles
+    .map(file => {
+      const match = file.match(datePattern);
+      return match ? match[1] : null;
+    })
+    .filter(d => d !== null)
+    .sort();
+  
+  const dateRange = dates.length > 0 
+    ? `**Date range**: ${dates[0]} to ${dates[dates.length - 1]}\n`
+    : '';
+  
+  // Format consolidation timestamp
+  const consolidationDate = new Date(ts).toISOString().split('T')[0];
+  
+  // Build file content with metadata header
+  const fileContent = `# Consolidated Memory
+
+**Original files**: ${originalFiles.length}
+${dateRange}**Consolidated**: ${consolidationDate}
+
+---
+
+${content}`;
+  
+  fs.writeFileSync(filename, fileContent, 'utf8');
+  
+  return filename;
+}
+
 module.exports = {
   getBatches,
-  consolidateBatch
+  consolidateBatch,
+  saveConsolidatedMemory
 };
