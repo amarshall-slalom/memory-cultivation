@@ -186,4 +186,91 @@ describe('Batch Consolidator Module', () => {
       });
     });
   });
+
+  describe('TDD Cycle 18: Save consolidated memories', () => {
+    describe('shouldSaveConsolidatedMemoryWithTimestamp', () => {
+      test('should save consolidated memory to .memory directory', () => {
+        const content = 'Consolidated content here';
+        const originalFiles = ['.memory/file1.md', '.memory/file2.md'];
+        const timestamp = 1734901234567;
+
+        const filename = batchConsolidator.saveConsolidatedMemory(content, originalFiles, timestamp);
+
+        expect(filename).toBe('.memory/consolidated-1734901234567.md');
+        expect(fs.writeFileSync).toHaveBeenCalledWith(
+          '.memory/consolidated-1734901234567.md',
+          expect.any(String),
+          'utf8'
+        );
+      });
+
+      test('should use current timestamp if not provided', () => {
+        const content = 'Test content';
+        const originalFiles = ['.memory/a.md'];
+        const now = Date.now();
+        
+        jest.spyOn(Date, 'now').mockReturnValue(now);
+
+        const filename = batchConsolidator.saveConsolidatedMemory(content, originalFiles);
+
+        expect(filename).toBe(`.memory/consolidated-${now}.md`);
+        
+        Date.now.mockRestore();
+      });
+    });
+
+    describe('shouldIncludeMetadataInConsolidatedFile', () => {
+      test('should include file count, date range, and timestamp in header', () => {
+        const content = 'Behavioral changes:\n- Added auth\n\nStructural changes:\n- Refactored';
+        const originalFiles = [
+          '.memory/file1-2024-12-01.md',
+          '.memory/file2-2024-12-05.md',
+          '.memory/file3-2024-12-10.md'
+        ];
+        const timestamp = 1734901234567; // Dec 22, 2024
+
+        batchConsolidator.saveConsolidatedMemory(content, originalFiles, timestamp);
+
+        const savedContent = fs.writeFileSync.mock.calls[0][1];
+        
+        // Should include metadata header
+        expect(savedContent).toContain('# Consolidated Memory');
+        expect(savedContent).toContain('**Original files**: 3');
+        expect(savedContent).toContain('**Consolidated**: 2024-12-22');
+        
+        // Should include the actual content
+        expect(savedContent).toContain('Behavioral changes:');
+        expect(savedContent).toContain('- Added auth');
+      });
+
+      test('should extract date range from filenames', () => {
+        const content = 'Test';
+        const originalFiles = [
+          '.memory/abc123-2024-12-01.md',
+          '.memory/def456-2024-12-15.md'
+        ];
+        const timestamp = Date.now();
+
+        batchConsolidator.saveConsolidatedMemory(content, originalFiles, timestamp);
+
+        const savedContent = fs.writeFileSync.mock.calls[0][1];
+        
+        expect(savedContent).toContain('**Date range**: 2024-12-01 to 2024-12-15');
+      });
+
+      test('should handle files without dates in metadata', () => {
+        const content = 'Test';
+        const originalFiles = ['.memory/no-date.md'];
+        const timestamp = Date.now();
+
+        batchConsolidator.saveConsolidatedMemory(content, originalFiles, timestamp);
+
+        const savedContent = fs.writeFileSync.mock.calls[0][1];
+        
+        // Should still work, just no date range
+        expect(savedContent).toContain('# Consolidated Memory');
+        expect(savedContent).toContain('**Original files**: 1');
+      });
+    });
+  });
 });

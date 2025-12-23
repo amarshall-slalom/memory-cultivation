@@ -188,20 +188,20 @@ Final pass: Analyze 8 consolidated files for instruction suggestions
   - [x] All 63 tests passing (9 in batchConsolidator)
   - [x] Commit: "behavioral: add AI batch consolidation capability" (b213de3)
 
-- [ ] **BEHAVIORAL** (TDD Cycle 18): Save consolidated memories
-  - [ ] Write failing test: `shouldSaveConsolidatedMemoryWithTimestamp`
+- [x] **BEHAVIORAL** (TDD Cycle 18): Save consolidated memories ✅ **COMPLETED**
+  - [x] Write failing test: `shouldSaveConsolidatedMemoryWithTimestamp`
     - Verify file saved to .memory/ directory
     - Verify naming: consolidated-{timestamp}.md
     - Verify content includes metadata (original file count, date range)
-  - [ ] Write failing test: `shouldIncludeMetadataInConsolidatedFile`
+  - [x] Write failing test: `shouldIncludeMetadataInConsolidatedFile`
     - Verify header includes: number of memories, date range, consolidation timestamp
-  - [ ] Implement `saveConsolidatedMemory(content, originalFiles, timestamp)` function
+  - [x] Implement `saveConsolidatedMemory(content, originalFiles, timestamp)` function
     - Generate filename with timestamp
     - Add metadata header
     - Write to .memory/ directory
     - Return filename
-  - [ ] Verify tests pass
-  - [ ] Commit: "behavioral: save consolidated memory files with metadata"
+  - [x] Verify tests pass
+  - [x] Commit: "behavioral: save consolidated memory files with metadata" (59a8928)
 
 - [ ] **BEHAVIORAL** (TDD Cycle 19): Interactive batch approval workflow
   - [ ] Write failing test: `shouldPromptUserForBatchApproval`
