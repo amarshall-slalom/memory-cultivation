@@ -45,6 +45,14 @@ fi
 BRANCH=$(git branch --show-current)
 echo "📍 Current branch: $BRANCH"
 
+# Prevent commits to main
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  echo "❌ ERROR: Cannot commit directly to $BRANCH branch"
+  echo "Please create a feature branch first:"
+  echo "  git checkout -b feature/description-of-work"
+  exit 1
+fi
+
 # Step 1: Stage all changes
 echo "📦 Staging changes..."
 git add -A
