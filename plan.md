@@ -176,22 +176,17 @@ Final pass: Analyze 8 consolidated files for instruction suggestions
   - [x] Updated COPILOT_INSTRUCTIONS.md with usage guidance
   - [x] Commit: "chore: add sequential git workflow script to prevent race conditions" (c3ed023)
 
-- [ ] **BEHAVIORAL** (TDD Cycle 17): Batch consolidation with AI
-  - [ ] Write failing test: `shouldConsolidateBatchUsingConfiguredModel`
-    - Mock aiCommandBuilder.executeAICommand
-    - Verify it uses 'consolidate-batch' operation
-    - Verify correct model from config
-    - Verify batch memories passed to prompt
-  - [ ] Write failing test: `shouldHandleConsolidationErrors`
-    - Test AI failure scenarios
-    - Should return error message, not crash
-  - [ ] Implement `consolidateBatch(batchFiles, config)` function
-    - Read all memory files in batch
-    - Build consolidation prompt
-    - Call aiCommandBuilder with 'consolidate-batch' operation
-    - Return consolidated text
-  - [ ] Verify tests pass
-  - [ ] Commit: "behavioral: add AI batch consolidation capability"
+- [x] **BEHAVIORAL** (TDD Cycle 17): Batch consolidation with AI ✅ **COMPLETED**
+  - [x] Write failing tests for batch consolidation
+  - [x] Mock aiCommandBuilder and fs modules
+  - [x] Implement `consolidateBatch(batchFiles, config)` function
+    - Reads all memory files in batch
+    - Builds consolidation prompt with memories
+    - Calls AI with 'consolidate-batch' operation  
+    - Returns consolidated text
+    - Handles file read and AI errors gracefully
+  - [x] All 63 tests passing (9 in batchConsolidator)
+  - [x] Commit: "behavioral: add AI batch consolidation capability" (b213de3)
 
 - [ ] **BEHAVIORAL** (TDD Cycle 18): Save consolidated memories
   - [ ] Write failing test: `shouldSaveConsolidatedMemoryWithTimestamp`
