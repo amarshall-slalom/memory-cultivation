@@ -1,9 +1,11 @@
 const batchConsolidator = require('../src/batchConsolidator');
 const aiCommandBuilder = require('../src/aiCommandBuilder');
 const fs = require('fs');
+const readline = require('readline');
 
 jest.mock('../src/aiCommandBuilder');
 jest.mock('fs');
+jest.mock('readline');
 
 describe('Batch Consolidator Module', () => {
   beforeEach(() => {
@@ -270,6 +272,131 @@ describe('Batch Consolidator Module', () => {
         // Should still work, just no date range
         expect(savedContent).toContain('# Consolidated Memory');
         expect(savedContent).toContain('**Original files**: 1');
+      });
+    });
+  });
+
+  describe('TDD Cycle 19: Interactive batch approval workflow', () => {
+    describe('shouldPromptUserForBatchApproval', () => {
+      test('should display consolidated text to user', async () => {
+        const consolidatedText = 'Consolidated summary:\n- Feature A\n- Feature B';
+        const batchInfo = { batchNumber: 1, totalBatches: 3, fileCount: 13 };
+        
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        const mockRl = {
+          question: jest.fn((prompt, callback) => callback('y')),
+          close: jest.fn()
+        };
+        readline.createInterface.mockReturnValue(mockRl);
+
+        await batchConsolidator.promptForApproval(consolidatedText, batchInfo);
+
+        const consoleOutput = consoleSpy.mock.calls.map(call => call[0]).join(' ');
+        expect(consoleOutput).toContain('Batch 1/3');
+        expect(consoleOutput).toContain('13');
+        
+        consoleSpy.mockRestore();
+      });
+
+      test('should show batch info when prompting', async () => {
+        const consolidatedText = 'Test content';
+        const batchInfo = { batchNumber: 1, totalBatches: 1, fileCount: 5 };
+        
+        const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+        const mockRl = {
+          question: jest.fn((prompt, callback) => callback('y')),
+          close: jest.fn()
+        };
+        readline.createInterface.mockReturnValue(mockRl);
+
+        await batchConsolidator.promptForApproval(consolidatedText, batchInfo);
+
+        // Check console output includes batch info and options
+        const consoleOutput = consoleSpy.mock.calls.map(call => call[0]).join(' ');
+        expect(consoleOutput).toContain('Batch 1/1');
+        expect(consoleOutput).toContain('y');
+        expect(consoleOutput).toContain('n');
+        expect(consoleOutput).toContain('edit');
+        expect(consoleOutput).toContain('retry');
+        
+        consoleSpy.mockRestore();
+      });
+    });
+
+    describe('shouldHandleUserApproval', () => {
+      test('should return approve action when user types y', async () => {
+        const consolidatedText = 'Test';
+        const batchInfo = { batchNumber: 1, totalBatches: 1, fileCount: 5 };
+        
+        const mockRl = {
+          question: jest.fn((prompt, callback) => callback('y')),
+          close: jest.fn()
+        };
+        readline.createInterface.mockReturnValue(mockRl);
+
+        const result = await batchConsolidator.promptForApproval(consolidatedText, batchInfo);
+
+        expect(result.action).toBe('approve');
+        expect(result.approved).toBe(true);
+        expect(result.customText).toBeNull();
+      });
+
+      test('should return skip action when user types n', async () => {
+        const consolidatedText = 'Test';
+        const batchInfo = { batchNumber: 1, totalBatches: 1, fileCount: 5 };
+        
+        const mockRl = {
+          question: jest.fn((prompt, callback) => callback('n')),
+          close: jest.fn()
+        };
+        readline.createInterface.mockReturnValue(mockRl);
+
+        const result = await batchConsolidator.promptForApproval(consolidatedText, batchInfo);
+
+        expect(result.action).toBe('skip');
+        expect(result.approved).toBe(false);
+        expect(result.customText).toBeNull();
+      });
+    });
+
+    describe('shouldAllowUserToWriteOwnSummary', () => {
+      test('should prompt for custom text when user types edit', async () => {
+        const consolidatedText = 'AI generated text';
+        const batchInfo = { batchNumber: 1, totalBatches: 1, fileCount: 5 };
+        
+        const mockRl = {
+          question: jest.fn()
+            .mockImplementationOnce((prompt, callback) => callback('edit'))
+            .mockImplementationOnce((prompt, callback) => callback('My custom summary text')),
+          close: jest.fn()
+        };
+        readline.createInterface.mockReturnValue(mockRl);
+
+        const result = await batchConsolidator.promptForApproval(consolidatedText, batchInfo);
+
+        expect(mockRl.question).toHaveBeenCalledTimes(2);
+        expect(result.action).toBe('approve');
+        expect(result.approved).toBe(true);
+        expect(result.customText).toBe('My custom summary text');
+      });
+    });
+
+    describe('shouldHandleUserRetry', () => {
+      test('should return retry action when user types retry', async () => {
+        const consolidatedText = 'Test';
+        const batchInfo = { batchNumber: 1, totalBatches: 1, fileCount: 5 };
+        
+        const mockRl = {
+          question: jest.fn((prompt, callback) => callback('retry')),
+          close: jest.fn()
+        };
+        readline.createInterface.mockReturnValue(mockRl);
+
+        const result = await batchConsolidator.promptForApproval(consolidatedText, batchInfo);
+
+        expect(result.action).toBe('retry');
+        expect(result.approved).toBe(false);
+        expect(result.customText).toBeNull();
       });
     });
   });
