@@ -249,14 +249,14 @@ Final pass: Analyze 8 consolidated files for instruction suggestions
   - [ ] Manual testing with real memory files
   - [x] Commit: "behavioral: integrate batch consolidation into cultivate workflow"
 
-- [ ] **STRUCTURAL** (TDD Cycle 21): Refactor and polish batch consolidation
-  - [ ] Extract common prompt building logic
-  - [ ] Add progress indicators (e.g., "Processing batch 3/8...")
-  - [ ] Improve error messages
-  - [ ] Add dry-run mode (show what would happen without executing)
-  - [ ] Verify all tests still pass
-  - [ ] Run linter and fix issues
-  - [ ] Commit: "structural: refactor batch consolidation for clarity"
+- [x] **STRUCTURAL** (TDD Cycle 21): Refactor and polish batch consolidation ✅ **COMPLETED**
+  - [x] Extract common prompt building logic
+  - [x] Add progress indicators (e.g., "Processing batch 3/8...")
+  - [x] Improve error messages
+  - [ ] Add dry-run mode (show what would happen without executing) ⏸️ **DEFERRED**
+  - [x] Verify all tests still pass
+  - [x] Run linter and fix issues
+  - [x] Commit: "structural: refactor batch consolidation for clarity"
 
 #### File Naming Convention
 - Original memories: `.memory/{commit-hash}-{date}.md`

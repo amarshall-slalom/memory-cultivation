@@ -33,56 +33,73 @@ async function runBatchConsolidation(memoryFilePaths, config) {
   const remainingFiles = [];
   
   for (const batch of batches) {
-    let consolidated = null;
-    let retry = true;
-    
-    while (retry) {
-      console.log(`\nBatch ${batch.batchNumber}/${batches.length}: Consolidating ${batch.files.length} memories...`);
-      
-      // Generate consolidation
-      consolidated = batchConsolidator.consolidateBatch(batch.files, config);
-      
-      // Show to user and get approval
-      const batchInfo = {
-        batchNumber: batch.batchNumber,
-        totalBatches: batches.length,
-        fileCount: batch.files.length
-      };
-      
-      const approval = await batchConsolidator.promptForApproval(consolidated, batchInfo);
-      
-      if (approval.action === 'retry') {
-        // Retry loop continues
-        continue;
-      } else if (approval.action === 'skip') {
-        // Keep original files
-        remainingFiles.push(...batch.files);
-        retry = false;
-      } else if (approval.action === 'approve') {
-        // Save consolidated file
-        const contentToSave = approval.customText || consolidated;
-        const consolidatedFile = batchConsolidator.saveConsolidatedMemory(
-          contentToSave,
-          batch.files,
-          Date.now()
-        );
-        
-        console.log(`\n✓ Batch ${batch.batchNumber} consolidated → ${consolidatedFile}`);
-        
-        // Delete originals
-        batch.files.forEach(file => {
-          fs.unlinkSync(file);
-        });
-        console.log(`  Deleted ${batch.files.length} original memory files`);
-        
-        // Add consolidated file to remaining
-        remainingFiles.push(consolidatedFile);
-        retry = false;
-      }
-    }
+    const processedFiles = await processBatch(batch, batches.length, config);
+    remainingFiles.push(...processedFiles);
   }
   
   return remainingFiles;
+}
+
+async function processBatch(batch, totalBatches, config) {
+  let retry = true;
+  
+  while (retry) {
+    console.log(`\n⏳ Processing batch ${batch.batchNumber}/${totalBatches} (${batch.files.length} memories)...`);
+    
+    // Generate consolidation
+    const consolidated = batchConsolidator.consolidateBatch(batch.files, config);
+    
+    // Get user approval
+    const batchInfo = {
+      batchNumber: batch.batchNumber,
+      totalBatches: totalBatches,
+      fileCount: batch.files.length
+    };
+    
+    const approval = await batchConsolidator.promptForApproval(consolidated, batchInfo);
+    
+    // Handle user decision
+    const result = handleBatchApproval(approval, consolidated, batch);
+    
+    if (result.retry) {
+      continue; // Retry loop
+    }
+    
+    return result.files;
+  }
+}
+
+function handleBatchApproval(approval, consolidated, batch) {
+  if (approval.action === 'retry') {
+    return { retry: true, files: [] };
+  }
+  
+  if (approval.action === 'skip') {
+    console.log(`⏭️  Skipped batch ${batch.batchNumber} - keeping ${batch.files.length} original files`);
+    return { retry: false, files: batch.files };
+  }
+  
+  if (approval.action === 'approve') {
+    const contentToSave = approval.customText || consolidated;
+    const consolidatedFile = batchConsolidator.saveConsolidatedMemory(
+      contentToSave,
+      batch.files,
+      Date.now()
+    );
+    
+    console.log(`\n✅ Batch ${batch.batchNumber} consolidated → ${consolidatedFile}`);
+    
+    // Delete originals
+    batch.files.forEach(file => {
+      fs.unlinkSync(file);
+    });
+    console.log(`   🗑️  Deleted ${batch.files.length} original memory files`);
+    
+    return { retry: false, files: [consolidatedFile] };
+  }
+  
+  // Should never reach here
+  return { retry: false, files: batch.files };
 }
 
 async function run() {
