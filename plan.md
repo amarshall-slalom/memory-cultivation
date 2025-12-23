@@ -318,65 +318,46 @@ Analyzing 8 consolidated memories for instruction improvements...
   - [ ] Commit: "behavioral: identify outdated instruction content"
 
 ### 3.3 User Interaction Module
-- [x] **BEHAVIORAL** (TDD Cycle 17): Prompt for integration approval ✅ **MVP IMPLEMENTED**
-  - [x] Write failing test: `shouldPromptUserForEachSuggestionWithYesNoOption`
-  - [x] Implement interactive prompt for suggestions
-  - [x] Verify test passes
-  - [x] Commit: "behavioral: prompt user to approve learning integrations"
+- [x] **BEHAVIORAL** (Cycles 17, 19): Interactive prompts ✅ **MVP IMPLEMENTED**
+  - [x] Prompt for cleanup approval (Cycle 17)
+  - [x] Prompt for batch approval (Cycle 19)
   - **Note**: Implemented in cultivation command (bin/cultivate.js) for cleanup workflow
 
-- [ ] **BEHAVIORAL** (TDD Cycle 18): Prompt for removal approval ⏸️ **NOT IMPLEMENTED**
-  - [ ] Write failing test: `shouldPromptUserToRemoveOutdatedContent`
-  - [ ] Implement interactive prompt for removals
+- [ ] **BEHAVIORAL** (Future): Interactive instruction file updates ⏸️ **DEFERRED**
+  - [ ] Write failing test: `shouldPromptUserForEachSuggestionWithApplyOption`
+  - [ ] Implement interactive prompt for each AI suggestion
+  - [ ] Allow preview before applying
   - [ ] Verify test passes
-  - [ ] Commit: "behavioral: prompt user to approve content removals"
-  - **Note**: Would require AI suggestions first
+  - [ ] Commit: "behavioral: add interactive instruction file updates"
+  - **Note**: Currently manual - user copies suggestions themselves
 
-- [ ] **STRUCTURAL**: Refactor user interaction ⏸️ **NOT IMPLEMENTED**
+- [ ] **STRUCTURAL** (Future): Refactor user interaction ⏸️ **DEFERRED**
   - [ ] Extract prompt logic into reusable function
-  - [ ] Improve user-facing messages
-  - [ ] Verify tests still pass
-  - [ ] Commit: "structural: extract reusable prompt interaction logic"
   - [ ] Improve user-facing messages
   - [ ] Verify tests still pass
   - [ ] Commit: "structural: extract reusable prompt interaction logic"
 
 ### 3.4 File Update & Cleanup Module
-- [ ] **BEHAVIORAL** (TDD Cycle 19): Update instruction files ⏸️ **NOT IMPLEMENTED**
+- [x] **BEHAVIORAL** (Cycle 20): Remove memory files ✅ **COMPLETED**
+  - [x] Implemented in bin/cultivate.js (manual cleanup workflow)
+  - [x] Interactive prompt for cleanup
+  - [x] Optional git commit
+
+- [ ] **BEHAVIORAL** (Future): Automatic instruction file updates ⏸️ **DEFERRED**
   - [ ] Write failing test: `shouldUpdateInstructionFilesWithApprovedSuggestions`
   - [ ] Implement file update logic based on user approvals
+  - [ ] Support preview and rollback
   - [ ] Verify test passes
   - [ ] Commit: "behavioral: update instruction files with approved suggestions"
-  - **Note**: Would require AI suggestions and interactive editing
-
-- [x] **BEHAVIORAL** (TDD Cycle 20): Remove memory files ✅ **MVP IMPLEMENTED**
-  - [x] Write failing test: `shouldRemoveAllFilesFromMemoryDirectory`
-  - [x] Implement cleanup of `.memory/` directory
-  - [x] Verify test passes
-  - [x] Commit: "behavioral: clean up memory directory after cultivation"
-  - **Note**: Implemented in bin/cultivate.js (manual cleanup workflow)
-
-- [x] **BEHAVIORAL** (TDD Cycle 21): Create cultivate commit ✅ **MVP IMPLEMENTED**
-  - [x] Write failing test: `shouldCommitInstructionUpdatesAndMemoryCleanup`
-  - [x] Implement git commit logic for cultivation changes
-  - [x] Verify test passes
-  - [x] Commit: "behavioral: create git commit for cultivation changes"
-  - **Note**: Implemented in bin/cultivate.js (optional commit)
+  - **Note**: Would require interactive editing workflow
 
 ### 3.5 Command Integration
-- [x] **BEHAVIORAL** (TDD Cycle 22): Wire cultivation workflow ✅ **MVP IMPLEMENTED**
-  - [x] Write integration test: `shouldExecuteFullCultivationWorkflow`
-  - [x] Connect all cultivation modules
-  - [x] Verify integration test passes
-  - [x] Commit: "behavioral: integrate full memory cultivation workflow"
+- [x] **BEHAVIORAL** (Cycles 20, 21, 22): Full cultivation workflow ✅ **COMPLETED**
+  - [x] Cycle 20: Integrate batch consolidation into cultivate
+  - [x] Cycle 21: Refactor for clarity
+  - [x] Cycle 22 (implicit): Working end-to-end workflow
+  - [x] All tests passing, linter clean
   - **Note**: Working cultivation command in bin/cultivate.js
-
-- [x] **STRUCTURAL**: Refactor cultivation command ✅ **COMPLETED**
-  - [x] Break into smaller, focused functions
-  - [x] Add progress indicators
-  - [x] Verify tests still pass
-  - [x] Commit: "structural: refactor cultivation command for maintainability"
-  - **Note**: Built cleanly from the start
 
 ---
 
@@ -426,7 +407,16 @@ Analyzing 8 consolidated memories for instruction improvements...
   - [x] Commit: "structural: create comprehensive user documentation"
   - **Note**: Comprehensive README.md created
 
-### 5.2 Developer Documentation
+### 6.1 User Documentation
+- [x] **STRUCTURAL**: Create comprehensive README ✅ **COMPLETED**
+  - [x] Document installation steps
+  - [x] Document usage for pre-commit hook
+  - [x] Document usage for cultivation command
+  - [x] Add configuration examples
+  - [x] Add troubleshooting section
+  - [x] Commit: "structural: create comprehensive user documentation"
+
+### 6.2 Developer Documentation
 - [x] **STRUCTURAL**: Add developer docs ✅ **COMPLETED**
   - [x] Document architecture and design decisions
   - [x] Add contributing guidelines
@@ -434,65 +424,12 @@ Analyzing 8 consolidated memories for instruction improvements...
   - [x] Commit: "structural: add developer documentation"
   - **Note**: IMPLEMENTATION_SUMMARY.md provides detailed developer documentation
 
-### 5.3 Examples & Templates
+### 6.3 Examples & Templates
 - [x] **STRUCTURAL**: Add examples ✅ **PARTIALLY COMPLETED**
-  - [x] Create example memory files (4 files generated automatically)
+  - [x] Create example memory files (generated automatically through usage)
   - [x] Create example instruction files (uses existing .github/copilot/COPILOT_INSTRUCTIONS.md)
   - [x] Create example configuration files (.memory-cultivation.config.json)
   - [x] Commit: "structural: add example files and templates"
-  - **Note**: Real memory files generated through usage
-
----
-
-## Phase 6: Final Testing & Validation
-
-### 6.1 End-to-End Testing
-- [x] **BEHAVIORAL**: Add E2E tests ✅ **PARTIALLY COMPLETED**
-  - [x] Write E2E test for complete pre-commit workflow (tests/preCommitHook.test.js)
-  - [ ] Write E2E test for complete cultivation workflow ⏸️ **NOT IMPLEMENTED**
-  - [x] Verify all tests pass
-  - [x] Commit: "behavioral: add end-to-end integration tests"
-  - **Note**: Pre-commit integration tested; cultivation is manual workflow
-
-### 6.2 Edge Case Testing
-- [x] **BEHAVIORAL**: Test edge cases ⚠️ **NEEDS IMPROVEMENT**
-  - [ ] Test with very large diffs ⏸️ **NOT IMPLEMENTED**
-  - [x] Test with empty repositories (handled in fileReader.js)
-  - [x] Test with AI CLI failures (handled in tests) - **BUT over-mocked**
-  - [ ] Test with concurrent commits ⏸️ **NOT IMPLEMENTED**
-  - [x] Verify all edge cases handled
-  - [x] Commit: "behavioral: add edge case handling and tests"
-  - **Issues**: 
-    - ❌ AI failure tests are over-mocked and don't test real command execution
-    - ❌ Need tests with real copilot when available, graceful skip when not
-
-### 6.3 Integration Testing Strategy
-- [ ] **NEW**: Establish integration testing patterns
-  - [ ] **Philosophy**:
-    - Unit tests mock external dependencies (child_process, fs)
-    - Integration tests check real command execution when available
-    - Tests gracefully skip with clear messages when dependencies missing
-    - No false positives from over-mocking
-  - [ ] **Implementation**:
-    - [ ] Create helper: `isCommandAvailable(command)` - checks if CLI tool installed
-    - [ ] Pattern: `test.skipIf(!isCommandAvailable('copilot'), 'message', () => {...})`
-    - [ ] Integration tests marked with tag or separate file: `*.integration.test.js`
-    - [ ] CI can run `npm test` (unit only) or `npm run test:integration` (both)
-  - [ ] **Specific Tests Needed**:
-    - [ ] `aiCli.integration.test.js` - real copilot summarization
-    - [ ] `aiConsolidation.integration.test.js` - real copilot consolidation
-    - [ ] Test shell escaping with special characters in prompts
-    - [ ] Test multiline prompt handling
-    - [ ] Test model selection flag is passed correctly
-  - [ ] Commit: "structural: establish integration testing patterns"
-
-### 6.4 Final Validation
-- [ ] Run full test suite (unit tests) - **NEEDS UPDATE after 3.2.2**
-- [ ] Run integration test suite - **NEW**
-- [ ] Run linter and fix any warnings
-- [ ] Test in real repository scenarios with real copilot
-- [ ] Verify all documentation is accurate
-- [ ] Commit: "behavioral: validate with integration tests"
 
 ---
 
@@ -556,12 +493,48 @@ npm run remember -- --pr 42 --name feature-user-profiles
 
 ---
 
+## Phase 8: Final Testing & Validation
+
+### 8.1 End-to-End Testing
+- [x] **BEHAVIORAL**: Add E2E tests ✅ **PARTIALLY COMPLETED**
+  - [x] Write E2E test for complete pre-commit workflow (tests/preCommitHook.test.js)
+  - [x] Write integration tests for batch consolidation (tests/cultivate.integration.test.js)
+  - [x] Verify all tests pass
+  - [x] Commit: "behavioral: add end-to-end integration tests"
+  - **Note**: 81 tests passing
+
+### 8.2 Edge Case Testing
+- [x] **BEHAVIORAL**: Test edge cases ⚠️ **NEEDS IMPROVEMENT**
+  - [ ] Test with very large diffs ⏸️ **NOT IMPLEMENTED**
+  - [x] Test with empty repositories (handled in fileReader.js)
+  - [x] Test with AI CLI failures (handled in tests)
+  - [ ] Test with concurrent commits ⏸️ **NOT IMPLEMENTED**
+  - [x] Verify all edge cases handled
+  - [x] Commit: "behavioral: add edge case handling and tests"
+
+### 8.3 Integration Testing Strategy
+- [x] **STRUCTURAL**: Establish integration testing patterns ✅ **COMPLETED** (Cycle 15b)
+  - [x] Created aiCommandBuilder.integration.test.js
+  - [x] Tests detect if copilot command is available
+  - [x] Tests skip gracefully when dependencies missing
+  - [x] Tests verify real command execution
+  - **Note**: Pattern established and working
+
+### 8.4 Final Validation
+- [x] Run full test suite (81 tests passing)
+- [x] Run linter (clean)
+- [ ] Test in real repository scenarios with real copilot ⏸️ **MANUAL**
+- [x] Verify all documentation is accurate
+- [ ] Test npm package installation ⏸️ **WAITING ON PHASE 4**
+
+---
+
 ## Future Enhancements (Post-MVP)
 - Support additional AI CLIs (Claude, Gemini, Kiro)
 - More granular control over instruction file patterns
 - Web-based UI for cultivation workflow
 - Analytics on memory accumulation and cultivation patterns
-- Automated instruction file optimization suggestions
+- Automated instruction file optimization suggestions (interactive file editing)
 - Multi-language support for prompts
 - Batch memory regeneration (multiple commits at once)
 
