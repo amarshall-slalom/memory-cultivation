@@ -203,39 +203,39 @@ Final pass: Analyze 8 consolidated files for instruction suggestions
   - [x] Verify tests pass
   - [x] Commit: "behavioral: save consolidated memory files with metadata" (59a8928)
 
-- [ ] **BEHAVIORAL** (TDD Cycle 19): Interactive batch approval workflow
-  - [ ] Write failing test: `shouldPromptUserForBatchApproval`
+- [x] **BEHAVIORAL** (TDD Cycle 19): Interactive batch approval workflow ✅ **COMPLETED**
+  - [x] Write failing test: `shouldPromptUserForBatchApproval`
     - Mock readline interface
     - Verify consolidation shown to user
     - Verify approval prompt appears
-  - [ ] Write failing test: `shouldHandleUserApproval`
+  - [x] Write failing test: `shouldHandleUserApproval`
     - User types 'y': Delete originals, save consolidated
     - User types 'n': Skip batch, keep originals
-  - [ ] Write failing test: `shouldAllowUserToWriteOwnSummary`
+  - [x] Write failing test: `shouldAllowUserToWriteOwnSummary`
     - User types 'edit': Prompt for custom summary
     - Save custom summary as consolidated file
     - Delete originals
-  - [ ] Write failing test: `shouldHandleUserRetry`
+  - [x] Write failing test: `shouldHandleUserRetry`
     - User types 'retry': Re-run AI consolidation
     - Show new result
-  - [ ] Implement interactive approval in `batchConsolidator.js`
+  - [x] Implement interactive approval in `batchConsolidator.js`
     - Function: `promptForApproval(consolidatedText, batchInfo)`
     - Options: 'y' (approve), 'n' (skip), 'edit' (write own), 'retry' (regenerate)
     - Return: {approved: boolean, customText: string|null, action: 'approve'|'skip'|'retry'}
-  - [ ] Verify tests pass
-  - [ ] Commit: "behavioral: add interactive batch approval workflow"
+  - [x] Verify tests pass
+  - [x] Commit: "behavioral: add interactive batch approval workflow" (bc1f2b6)
 
-- [ ] **BEHAVIORAL** (TDD Cycle 20): Integrate batch consolidation into cultivate command
-  - [ ] Write integration test: `shouldRunBatchConsolidationBeforeFinal`
+- [x] **BEHAVIORAL** (TDD Cycle 20): Integrate batch consolidation into cultivate command ✅ **COMPLETED**
+  - [x] Write integration test: `shouldRunBatchConsolidationBeforeFinal`
     - Set up scenario with 50 memory files
     - Verify batches created
     - Verify user prompted for each batch
     - Verify consolidated files created
     - Verify original files deleted (when approved)
-  - [ ] Update `bin/cultivate.js`:
-    - [ ] Add batch consolidation phase before final consolidation
-    - [ ] Check memory count at start
-    - [ ] If > batchSize: Run batch consolidation loop
+  - [x] Update `bin/cultivate.js`:
+    - [x] Add batch consolidation phase before final consolidation
+    - [x] Check memory count at start
+    - [x] If > batchSize: Run batch consolidation loop
       - Get batches from batchConsolidator
       - For each batch:
         - Show batch info (e.g., "Batch 1/8: consolidating 13 memories from Dec 1-5")
@@ -244,10 +244,10 @@ Final pass: Analyze 8 consolidated files for instruction suggestions
         - Prompt for approval
         - Handle user response (approve/skip/edit/retry)
         - If approved: save consolidated, delete originals
-    - [ ] Continue to existing final consolidation with remaining files
-  - [ ] Verify integration test passes
+    - [x] Continue to existing final consolidation with remaining files
+  - [x] Verify integration test passes
   - [ ] Manual testing with real memory files
-  - [ ] Commit: "behavioral: integrate batch consolidation into cultivate workflow"
+  - [x] Commit: "behavioral: integrate batch consolidation into cultivate workflow"
 
 - [ ] **STRUCTURAL** (TDD Cycle 21): Refactor and polish batch consolidation
   - [ ] Extract common prompt building logic

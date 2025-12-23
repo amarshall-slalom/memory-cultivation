@@ -14,6 +14,19 @@ function readMemoryFiles() {
   }
 }
 
+function getMemoryFilePaths() {
+  try {
+    const memoryDir = path.join(process.cwd(), '.memory');
+    const files = fs.readdirSync(memoryDir);
+    
+    return files
+      .filter(f => f.endsWith('.md'))
+      .map(f => path.join(memoryDir, f));
+  } catch {
+    return [];
+  }
+}
+
 function readInstructionFiles() {
   const instructionPath = path.join(process.cwd(), '.github', 'copilot', 'COPILOT_INSTRUCTIONS.md');
   
@@ -26,5 +39,6 @@ function readInstructionFiles() {
 
 module.exports = {
   readMemoryFiles,
-  readInstructionFiles
+  readInstructionFiles,
+  getMemoryFilePaths
 };

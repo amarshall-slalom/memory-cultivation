@@ -2,6 +2,8 @@
 
 const fileReader = require('../src/fileReader');
 const aiConsolidation = require('../src/aiConsolidation');
+const batchConsolidator = require('../src/batchConsolidator');
+const configReader = require('../src/configReader');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -16,11 +18,80 @@ function question(query) {
   return new Promise(resolve => rl.question(query, resolve));
 }
 
+async function runBatchConsolidation(memoryFilePaths, config) {
+  const batchSize = config?.cultivation?.batchSize || 20;
+  
+  // Skip batch consolidation if under threshold
+  if (memoryFilePaths.length <= batchSize) {
+    return memoryFilePaths;
+  }
+  
+  console.log('\n=== Phase 1: Batch Consolidation ===');
+  console.log(`You have ${memoryFilePaths.length} memories. Let's consolidate them in batches.\n`);
+  
+  const batches = batchConsolidator.getBatches(memoryFilePaths, batchSize);
+  const remainingFiles = [];
+  
+  for (const batch of batches) {
+    let consolidated = null;
+    let retry = true;
+    
+    while (retry) {
+      console.log(`\nBatch ${batch.batchNumber}/${batches.length}: Consolidating ${batch.files.length} memories...`);
+      
+      // Generate consolidation
+      consolidated = batchConsolidator.consolidateBatch(batch.files, config);
+      
+      // Show to user and get approval
+      const batchInfo = {
+        batchNumber: batch.batchNumber,
+        totalBatches: batches.length,
+        fileCount: batch.files.length
+      };
+      
+      const approval = await batchConsolidator.promptForApproval(consolidated, batchInfo);
+      
+      if (approval.action === 'retry') {
+        // Retry loop continues
+        continue;
+      } else if (approval.action === 'skip') {
+        // Keep original files
+        remainingFiles.push(...batch.files);
+        retry = false;
+      } else if (approval.action === 'approve') {
+        // Save consolidated file
+        const contentToSave = approval.customText || consolidated;
+        const consolidatedFile = batchConsolidator.saveConsolidatedMemory(
+          contentToSave,
+          batch.files,
+          Date.now()
+        );
+        
+        console.log(`\n✓ Batch ${batch.batchNumber} consolidated → ${consolidatedFile}`);
+        
+        // Delete originals
+        batch.files.forEach(file => {
+          fs.unlinkSync(file);
+        });
+        console.log(`  Deleted ${batch.files.length} original memory files`);
+        
+        // Add consolidated file to remaining
+        remainingFiles.push(consolidatedFile);
+        retry = false;
+      }
+    }
+  }
+  
+  return remainingFiles;
+}
+
 async function run() {
   try {
     console.log('=== Memory Cultivation ===\n');
     
+    const config = configReader.loadConfig();
     const memories = fileReader.readMemoryFiles();
+    const memoryFilePaths = fileReader.getMemoryFilePaths();
     const instructions = fileReader.readInstructionFiles();
     
     if (memories.length === 0) {
@@ -30,8 +101,18 @@ async function run() {
     }
     
     console.log(`Found ${memories.length} memory file(s)\n`);
+    
+    // Run batch consolidation if needed
+    const remainingFiles = await runBatchConsolidation(memoryFilePaths, config);
+    
+    // If batch consolidation ran, reload memories
+    const finalMemories = remainingFiles.length !== memoryFilePaths.length 
+      ? fileReader.readMemoryFiles() 
+      : memories;
+    
+    console.log('\n=== Phase 2: Final Analysis ===');
     console.log('=== Memories ===');
-    memories.forEach((memory, idx) => {
+    finalMemories.forEach((memory, idx) => {
       console.log(`\n--- Memory ${idx + 1} ---`);
       console.log(memory);
     });
@@ -42,7 +123,7 @@ async function run() {
     console.log('\n\n=== AI-Generated Suggestions ===');
     console.log('Analyzing memories and generating consolidation suggestions...\n');
     
-    const suggestions = await aiConsolidation.generateConsolidationSuggestions(memories, instructions);
+    const suggestions = await aiConsolidation.generateConsolidationSuggestions(finalMemories, instructions);
     console.log(suggestions);
     
     console.log('\n\n=== Next Steps ===');
