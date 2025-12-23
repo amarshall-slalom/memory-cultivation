@@ -1,3 +1,6 @@
+const fs = require('fs');
+const aiCommandBuilder = require('./aiCommandBuilder');
+
 function getBatches(memoryFiles, batchSize) {
   if (!memoryFiles || memoryFiles.length === 0) {
     return [];
@@ -32,6 +35,34 @@ function getBatches(memoryFiles, batchSize) {
   return batches;
 }
 
+function consolidateBatch(batchFiles, config) {
+  try {
+    // Read all memory files
+    const memories = [];
+    for (const file of batchFiles) {
+      try {
+        const content = fs.readFileSync(file, 'utf8');
+        memories.push(content);
+      } catch (error) {
+        return `Error reading file ${file}: ${error.message}`;
+      }
+    }
+
+    // Build consolidation prompt
+    const basePrompt = aiCommandBuilder.getPrompt(config, 'consolidate-batch');
+    const memoriesText = memories.map((m, idx) => `### Memory ${idx + 1}\n${m}`).join('\n\n');
+    const fullPrompt = `${basePrompt}\n\n${memoriesText}`;
+
+    // Call AI to consolidate
+    const result = aiCommandBuilder.executeAICommand(config, 'consolidate-batch', fullPrompt);
+    return result;
+
+  } catch (error) {
+    return `Error consolidating batch: ${error.message}`;
+  }
+}
+
 module.exports = {
-  getBatches
+  getBatches,
+  consolidateBatch
 };

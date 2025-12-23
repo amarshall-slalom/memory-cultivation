@@ -1,6 +1,15 @@
 const batchConsolidator = require('../src/batchConsolidator');
+const aiCommandBuilder = require('../src/aiCommandBuilder');
+const fs = require('fs');
+
+jest.mock('../src/aiCommandBuilder');
+jest.mock('fs');
 
 describe('Batch Consolidator Module', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('TDD Cycle 16: Batch splitting logic', () => {
     describe('shouldReturnSingleBatchWhenUnderLimit', () => {
       test('should return single batch with all files when under limit', () => {
@@ -86,6 +95,94 @@ describe('Batch Consolidator Module', () => {
 
         const allFiles = batches.flatMap(b => b.files);
         expect(allFiles).toHaveLength(75);
+      });
+    });
+  });
+
+  describe('TDD Cycle 17: Batch consolidation with AI', () => {
+    describe('shouldConsolidateBatchUsingConfiguredModel', () => {
+      test('should use consolidate-batch operation from config', () => {
+        const batchFiles = ['.memory/file1.md', '.memory/file2.md'];
+        const config = {
+          ai: {
+            command: 'copilot',
+            operations: {
+              'consolidate-batch': {
+                model: 'gpt-5',
+                prompt: 'Consolidate these memories'
+              }
+            }
+          }
+        };
+
+        // Mock file reading
+        fs.readFileSync.mockReturnValueOnce('Memory 1 content');
+        fs.readFileSync.mockReturnValueOnce('Memory 2 content');
+
+        // Mock AI response
+        aiCommandBuilder.getPrompt.mockReturnValue('Consolidate these memories');
+        aiCommandBuilder.executeAICommand.mockReturnValue('Consolidated result');
+
+        const result = batchConsolidator.consolidateBatch(batchFiles, config);
+
+        expect(fs.readFileSync).toHaveBeenCalledTimes(2);
+        expect(aiCommandBuilder.executeAICommand).toHaveBeenCalledWith(
+          config,
+          'consolidate-batch',
+          expect.stringContaining('Memory 1 content')
+        );
+        expect(result).toBe('Consolidated result');
+      });
+
+      test('should pass all batch memories to AI prompt', () => {
+        const batchFiles = ['.memory/a.md', '.memory/b.md', '.memory/c.md'];
+        const config = { ai: { command: 'copilot' } };
+
+        fs.readFileSync.mockReturnValueOnce('Memory A');
+        fs.readFileSync.mockReturnValueOnce('Memory B');
+        fs.readFileSync.mockReturnValueOnce('Memory C');
+
+        aiCommandBuilder.getPrompt.mockReturnValue('Base prompt');
+        aiCommandBuilder.executeAICommand.mockReturnValue('Result');
+
+        batchConsolidator.consolidateBatch(batchFiles, config);
+
+        const callArgs = aiCommandBuilder.executeAICommand.mock.calls[0][2];
+        expect(callArgs).toContain('Memory A');
+        expect(callArgs).toContain('Memory B');
+        expect(callArgs).toContain('Memory C');
+      });
+    });
+
+    describe('shouldHandleConsolidationErrors', () => {
+      test('should return error message when AI fails', () => {
+        const batchFiles = ['.memory/file1.md'];
+        const config = { ai: { command: 'copilot' } };
+
+        fs.readFileSync.mockReturnValue('Memory content');
+        aiCommandBuilder.getPrompt.mockReturnValue('Prompt');
+        aiCommandBuilder.executeAICommand.mockImplementation(() => {
+          throw new Error('AI service unavailable');
+        });
+
+        const result = batchConsolidator.consolidateBatch(batchFiles, config);
+
+        expect(result).toContain('Error');
+        expect(result).toContain('AI service unavailable');
+      });
+
+      test('should handle file read errors gracefully', () => {
+        const batchFiles = ['.memory/missing.md'];
+        const config = { ai: { command: 'copilot' } };
+
+        fs.readFileSync.mockImplementation(() => {
+          throw new Error('File not found');
+        });
+
+        const result = batchConsolidator.consolidateBatch(batchFiles, config);
+
+        expect(result).toContain('Error');
+        expect(result).toContain('File not found');
       });
     });
   });

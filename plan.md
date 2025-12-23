@@ -168,25 +168,13 @@ Final pass: Analyze 8 consolidated files for instruction suggestions
   - [x] Commit: "behavioral: add batch splitting logic for memory consolidation" (acceb98)
 
 #### 3.2.4 Development Workflow Automation
-- [ ] **CHORE** (Cycle 16.5): Create sequential git workflow script
-  - [ ] **Problem**: Parallel tool calls can cause out-of-order execution
-    - Example: push completes before commit, leaving changes only on local
-    - Need to force sequential: commit → push → PR create
-  - [ ] **Solution**: Create `bin/git-workflow.sh` script
-  - [ ] **Script Requirements**:
-    - Takes `-m "commit message"` (required)
-    - Takes `--title "PR title"` (optional)
-    - Takes `--body "PR body"` (optional)
-    - Executes in strict order: `git add -A`, `git commit`, `git push`, `gh pr create`
-    - If no title/body: just commit and push to existing branch
-    - Exit on any failure (set -e)
-  - [ ] **Steps**:
-    - [ ] Create `bin/git-workflow.sh` with proper error handling
-    - [ ] Make executable: `chmod +x bin/git-workflow.sh`
-    - [ ] Test with commit-only mode
-    - [ ] Test with full PR creation mode
-    - [ ] Update `.github/copilot/COPILOT_INSTRUCTIONS.md` to use this script
-  - [ ] Commit: "chore: add sequential git workflow script to prevent race conditions"
+- [x] **CHORE** (Cycle 16.5): Create sequential git workflow script ✅ **COMPLETED**
+  - [x] Created `bin/git-workflow.sh` with sequential execution
+  - [x] Script takes `-m "message"`, `--title`, `--body` parameters
+  - [x] Executes in strict order: add → commit → push → PR create
+  - [x] Made executable and tested both modes
+  - [x] Updated COPILOT_INSTRUCTIONS.md with usage guidance
+  - [x] Commit: "chore: add sequential git workflow script to prevent race conditions" (c3ed023)
 
 - [ ] **BEHAVIORAL** (TDD Cycle 17): Batch consolidation with AI
   - [ ] Write failing test: `shouldConsolidateBatchUsingConfiguredModel`
